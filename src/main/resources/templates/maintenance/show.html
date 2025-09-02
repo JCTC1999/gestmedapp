@@ -90,7 +90,7 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item" th:each="o : ${finalizadas}">
                             <div class="order-info">
-                                <a th:href="@{'/maintenance/showcompleted/' + ${o.id}}"><b th:text="'#' + ${o.id}"></b> — <small th:text="${o.asset.assetId}"></small> — <span th:text="${o.type}"></span></a>
+                                <a th:href="@{'/maintenance/showCompleted/' + ${o.id}}"><b th:text="'#' + ${o.id}"></b> — <small th:text="${o.asset.assetId}"></small> — <span th:text="${o.type}"></span></a>
                             </div>
                             <small class="text-muted ms-auto" th:text="${o.scheduledDate}"></small>
                         </li>
