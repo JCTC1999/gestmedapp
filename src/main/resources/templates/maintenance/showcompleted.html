@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Orden de mantenimiento</title></head>
+<body>
+<h2>Orden #<span th:text="${order.id}"></span></h2>
+<p><b>Activo:</b> <span th:text="${order.asset.assetId}"></span> — <span th:text="${order.asset.model}"></span></p>
+<p><b>Tipo:</b> <span th:text="${order.type}"></span> | <b>Estado:</b> <span th:text="${order.status}"></span></p>
+<p><b>Responsable:</b> <span th:text="${order.responsible}"></span></p>
+<p><b>Programada:</b> <span th:text="${order.scheduledDate}"></span></p>
+<p><b>Tareas:</b><br><span th:text="${order.tasks}"></span></p>
+
+<hr>
+<h3>Evidencias</h3>
+
+<!-- Fotos -->
+<div th:if="${order.photoPaths} != null and ${!#strings.isEmpty(order.photoPaths)}">
+    <div th:each="p : ${#strings.arraySplit(order.photoPaths, '\\|')}">
+        <img th:src="@{'/' + ${p}}" alt="foto" style="max-width:300px; border:1px solid #ddd; margin:6px;">
+    </div>
+</div>
+<div th:if="${order.photoPaths} == null or ${#strings.isEmpty(order.photoPaths)}">
+    <em>Sin fotos adjuntas</em>
+</div>
+
+<!-- Firma -->
+<div th:if="${order.signaturePath} != null and ${!#strings.isEmpty(order.signaturePath)}">
+    <h4>Firma</h4>
+    <img th:src="@{'/' + ${order.signaturePath}}" alt="firma" style="max-width:300px; border:1px solid #ddd;">
+</div>
+
+
+<p><a href="/maintenance/list">Volver</a></p>
+
+</body>
+</html>

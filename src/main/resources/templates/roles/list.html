@@ -1,0 +1,21 @@
+<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org"><head><title>Roles</title></head><body>
+<h2>Roles</h2>
+<p><a href="/admin/roles/new">Nuevo rol</a> | <a href="/">Inicio</a></p>
+<table border="1" cellpadding="6">
+    <tr><th>Rol</th><th>Permisos</th><th></th></tr>
+    <tr th:each="r : ${roles}">
+        <td th:text="${r.roleName}"></td>
+        <td>
+            <span th:if="${r.canAssetsWrite}">Assets✏️</span>
+            <span th:if="${r.canContractsWrite}">Contracts✏️</span>
+            <!-- etc. -->
+        </td>
+        <td>
+            <a th:href="@{'/admin/roles/' + ${r.id}}">Editar</a>
+            <form th:action="@{'/admin/roles/' + ${r.id} + '/delete'}" method="post" style="display:inline">
+                <button type="submit">Eliminar</button>
+            </form>
+        </td>
+    </tr>
+</table>
+</body></html>

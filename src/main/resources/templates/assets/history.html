@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Historial</title></head>
+<body>
+<h2 th:text="'Historial de movimientos — ' + ${asset.assetId}">Historial</h2>
+
+<form method="get">
+    <label>Desde: <input type="date" name="from" th:value="${from}"/></label>
+    <label>Hasta: <input type="date" name="to" th:value="${to}"/></label>
+    <label>Ubicación contiene: <input type="text" name="location" th:value="${location}"/></label>
+    <button type="submit">Filtrar</button>
+    <a th:href="@{'/assets/' + ${asset.id} + '/history'}">Quitar filtros</a>
+</form>
+
+<table border="1" style="margin-top:10px; width:100%">
+    <tr>
+        <th>Fecha/Hora</th><th>Desde</th><th>Hacia</th><th>Motivo</th><th>Por</th>
+    </tr>
+    <tr th:each="m : ${movs}">
+        <td th:text="${#temporals.format(m.movedAt, 'yyyy-MM-dd HH:mm')}">2025-01-01 10:00</td>
+        <td th:text="${m.fromLocation}">A</td>
+        <td th:text="${m.toLocation}">B</td>
+        <td th:text="${m.reason}">Cambio</td>
+        <td th:text="${m.performedBy}">admin</td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(movs)}"><td colspan="5">Sin movimientos.</td></tr>
+</table>
+
+<p><a th:href="@{/assets}">Volver</a></p>
+</body>
+</html>

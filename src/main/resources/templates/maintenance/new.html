@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Nueva orden</title></head>
+<body>
+<h2>Nueva orden de mantenimiento</h2>
+
+<div>
+  <p><b>Activo:</b> <span th:text="${asset.assetId}"></span> — <span th:text="${asset.model}"></span></p>
+</div>
+
+<form th:action="@{/maintenance}" method="post">
+  <input type="hidden" name="assetId" th:value="${asset.id}">
+  <label>Tipo:
+    <select name="type" required>
+      <option th:value="PREVENTIVO">Preventivo</option>
+      <option th:value="CORRECTIVO">Correctivo</option>
+    </select>
+  </label><br>
+  <label>Responsable: <input name="responsible" required></label><br>
+  <label>Fecha programada: <input type="date" name="date" required></label><br>
+  <label>Tareas:<br><textarea name="tasks" rows="4" cols="60" required></textarea></label><br>
+  <button type="submit">Crear orden</button>
+  <a href="/assets">Cancelar</a>
+</form>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Contratos</title></head>
+<body>
+<h2>Contratos</h2>
+
+<p><a href="/contracts/new">Nuevo contrato</a> | <a href="/">Volver al Inicio</a></p>
+
+<table border="1" cellpadding="6">
+    <thead>
+    <tr>
+        <th>Código</th>
+        <th>Cliente</th>
+        <th>Inicio</th>
+        <th>Fin</th>
+        <th>Alertas (días)</th>
+        <th>Estado</th>
+        <th>Activos</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="c : ${contracts}">
+        <td th:text="${c.code}">C-001</td>
+        <td th:text="${c.clientName}">Cliente XYZ</td>
+        <td th:text="${c.startDate}">2025-01-01</td>
+        <td th:text="${c.endDate}">2025-12-31</td>
+        <td th:text="${c.alertDays}">30</td>
+        <td th:text="${c.status}">VIGENTE</td>
+
+        <td>
+            <span th:each="a : ${c.assets}" th:text="${a.assetId} + ' '" />
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

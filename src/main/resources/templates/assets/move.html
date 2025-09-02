@@ -1,0 +1,22 @@
+<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org"><head>
+    <meta charset="UTF-8"><title>Mover activo</title></head><body>
+<h2>Mover activo <span th:text="${asset.assetId}"></span></h2>
+<form th:action="@{'/assets/' + ${asset.id} + '/move'}" method="post">
+
+
+    <label>Nueva ubicación(lugar): <input name="toLocation" required></label><br>
+
+    <label>Nueva ubicación(Latitude): <input name="toLocationLatitude" required></label><br>
+
+    <label>Nueva ubicación(Longitude): <input name="toLocationLongitude" required></label><br>
+
+
+
+
+    <label>Nota: <input name="note"></label><br>
+    <button type="submit">Registrar movimiento</button>
+    <a th:href="@{'/assets/' + ${asset.id} + '/history'}">Ver historial</a>
+
+    <a href="/assets">Regresar</a></p>
+</form>
+</body></html>

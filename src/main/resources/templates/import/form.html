@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Importar activos</title></head>
+<body>
+<h2>Importación masiva de activos (CSV / XLSX)</h2>
+
+<div th:if="${error}" style="color:red" th:text="${error}"></div>
+
+<form th:action="@{/import}" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".csv,.xlsx" required>
+    <button type="submit">Importar</button>
+</form>
+
+<hr>
+<h3>Formato esperado</h3>
+<p><b>Columnas (en orden):</b> assetId, model, serialNumber, manufacturer, purchaseDate (yyyy-MM-dd), initialLocation, value</p>
+
+<p>Ejemplo CSV:</p>
+<pre>
+assetId,model,serialNumber,manufacturer,purchaseDate,initialLocation,value
+1234567,Monitor X,MN-001,Acme,2025-01-05,Almacén 1,850.00
+</pre>
+
+<p><a href="/">Volver al inicio</a> | <a href="/assets">Activos</a></p>
+</body>
+</html>

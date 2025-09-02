@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Nuevo contrato</title></head>
+<body>
+<h2>Nuevo contrato</h2>
+
+<form th:action="@{/contracts}" method="post">
+    <label>Código: <input name="code" required></label><br>
+    <label>Cliente: <input name="clientName" required></label><br>
+    <label>Fecha inicio: <input type="date" name="startDate" required></label><br>
+    <label>Fecha fin: <input type="date" name="endDate" required></label><br>
+    <label>Condiciones:<br>
+        <textarea name="terms" rows="4" cols="60"></textarea>
+    </label><br>
+    <label>Días de alerta:
+        <select name="alertDays" required>
+            <option value="30">30</option>
+            <option value="60">60</option>
+            <option value="90">90</option>
+        </select>
+    </label>
+    <hr>
+    <h3>Asociar activos</h3>
+    <div th:if="${#lists.isEmpty(assets)}">
+        <em>No hay activos aún. Crea uno en <a href="/assets">Activos</a>.</em>
+    </div>
+    <div th:each="a : ${assets}">
+        <label>
+            <input type="checkbox" name="assetIds" th:value="${a.id}">
+            <span th:text="${a.assetId} + ' — ' + ${a.model}">12345 — Modelo</span>
+        </label><br>
+    </div>
+    <br>
+    <button type="submit">Guardar</button>
+    <a href="/contracts">Cancelar</a>
+</form>
+
+</body>
+</html>

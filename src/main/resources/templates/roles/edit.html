@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${role.id} == null ? 'Nuevo rol' : 'Editar rol'">Rol</title>
+</head>
+<body>
+<h1 th:text="${role.id} == null ? 'Nuevo rol' : 'Editar rol'"></h1>
+
+<form th:action="@{/admin/roles}" th:object="${role}" method="post">
+    <!-- El id solo si existe (editar). Importante: *{id}, no ${id} -->
+    <input type="hidden" th:if="*{id} != null" th:field="*{id}"/>
+
+    <div>
+        <label>Nombre del rol (ej. WAREHOUSE)</label>
+        <input type="text" th:field="*{roleName}" required/>
+    </div>
+
+    <fieldset>
+        <legend>Permisos</legend>
+        <label><input type="checkbox" th:field="*{canAssetsRead}"/> Activos - Ver</label><br/>
+        <label><input type="checkbox" th:field="*{canAssetsWrite}"/> Activos - Editar</label><br/>
+        <label><input type="checkbox" th:field="*{canInventoryRead}"/> Inventario - Ver</label><br/>
+        <label><input type="checkbox" th:field="*{canInventoryWrite}"/> Inventario - Editar</label><br/>
+        <label><input type="checkbox" th:field="*{canContractsRead}"/> Contratos - Ver</label><br/>
+        <label><input type="checkbox" th:field="*{canContractsWrite}"/> Contratos - Editar</label><br/>
+        <label><input type="checkbox" th:field="*{canMaintenanceRead}"/> Mantenimiento - Ver</label><br/>
+        <label><input type="checkbox" th:field="*{canMaintenanceWrite}"/> Mantenimiento - Editar</label><br/>
+        <label><input type="checkbox" th:field="*{canReportsRead}"/> Reportes - Ver</label><br/>
+    </fieldset>
+
+    <button type="submit">Guardar</button>
+    <a th:href="@{/admin/roles}">Cancelar</a>
+</form>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title></title>
+
+
+    <!-- Bootstrap core CSS -->
+    <link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link th:href="@{/css/heroic-features.css}" rel="stylesheet">
+
+</head>
+
+<body>
+
+
+<!-- Page Content -->
+<div class="container">
+    <!-- templates/assets/new.html -->
+    <form th:action="@{/assets}" method="post" enctype="multipart/form-data">
+        <input name="assetId" placeholder="ID único" required>
+        <input name="model" placeholder="Modelo" required>
+        <input name="serialNumber" placeholder="Serie" required>
+        <input name="manufacturer" placeholder="Fabricante" required>
+        <input name="purchaseDate" type="date" required>
+        <input name="initialLocation" placeholder="Ubicación inicial" required>
+        <input name="lastLatitude" placeholder="Coordenadas Latitud Ubicación inicial" required>
+        <input name="lastLongitude" placeholder="Coordenadas Longitud Ubicación inicial" required>
+        <input name="value" type="number" step="0.01" placeholder="Valor" required>
+        <input name="rfidOrQrTag" placeholder="RFID/QR (opcional)">
+        <input name="photos" type="file" multiple>
+        <button type="submit">Guardar</button>
+    </form>
+
+
+</div>
+<!-- /.container -->
+
+
+
+<!-- Bootstrap core JavaScript -->
+<script th:src="@{/vendor/jquery/jquery.min.js}"></script>
+<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+
+</body>
+
+</html>

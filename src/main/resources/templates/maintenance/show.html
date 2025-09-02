@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Órdenes de mantenimiento</title></head>
+<body>
+<h2>Órdenes de mantenimiento</h2>
+
+<h3>Pendientes</h3>
+<ul>
+    <li th:each="o : ${pendientes}">
+        <a th:href="@{'/maintenance/' + ${o.id}}" th:text="${'#' + o.id + ' — ' + o.asset.assetId + ' — ' + o.type}"></a>
+        <small th:text="${o.scheduledDate}"></small>
+    </li>
+    <li th:if="${#lists.isEmpty(pendientes)}"><em>Sin pendientes</em></li>
+</ul>
+
+<h3>En curso</h3>
+<ul>
+    <li th:each="o : ${enCurso}">
+        <a th:href="@{'/maintenance/' + ${o.id}}" th:text="${'#' + o.id + ' — ' + o.asset.assetId + ' — ' + o.type}"></a>
+        <small th:text="${o.scheduledDate}"></small>
+    </li>
+    <li th:if="${#lists.isEmpty(enCurso)}"><em>Sin órdenes en curso</em></li>
+</ul>
+
+<h3>Finalizadas</h3>
+<ul>
+    <li th:each="o : ${finalizadas}">
+        <a th:href="@{'/maintenance/showcompleted/' + ${o.id}}" th:text="${'#' + o.id + ' — ' + o.asset.assetId + ' — ' + o.type}"></a>
+        <small th:text="${o.scheduledDate}"></small>
+    </li>
+    <li th:if="${#lists.isEmpty(finalizadas)}"><em>Sin finalizadas</em></li>
+</ul>
+
+<p><a href="/">Volver a home</a></p>
+</body>
+</html>
+

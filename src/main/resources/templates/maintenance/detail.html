@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Orden de mantenimiento</title></head>
+<body>
+<h2>Orden #<span th:text="${order.id}"></span></h2>
+<p><b>Activo:</b> <span th:text="${order.asset.assetId}"></span> — <span th:text="${order.asset.model}"></span></p>
+<p><b>Tipo:</b> <span th:text="${order.type}"></span> | <b>Estado:</b> <span th:text="${order.status}"></span></p>
+<p><b>Responsable:</b> <span th:text="${order.responsible}"></span></p>
+<p><b>Programada:</b> <span th:text="${order.scheduledDate}"></span></p>
+<p><b>Tareas:</b><br><span th:text="${order.tasks}"></span></p>
+
+<h3>Consumir refacciones</h3>
+<form th:action="@{'/maintenance/' + ${order.id} + '/consume'}" method="post">
+    <select name="partId" required>
+        <option th:each="p : ${parts}" th:value="${p.id}" th:text="${p.name} + ' (stock: ' + ${p.stock} + ')'"></option>
+    </select>
+    <input type="number" name="qty" placeholder="cantidad" min="1" required>
+    <button type="submit">Consumir</button>
+</form>
+
+<h3>Cerrar orden</h3>
+<form th:action="@{'/maintenance/' + ${order.id} + '/close'}" method="post" enctype="multipart/form-data" onsubmit="return attachSig()">
+    <label>Fotos (opcional): <input type="file" name="photos" multiple></label><br>
+    <p>Firma del técnico:</p>
+    <canvas id="sig" width="400" height="180" style="border:1px solid #ccc"></canvas><br>
+    <button type="button" onclick="clearSig()">Limpiar</button>
+    <input type="hidden" name="signatureDataUrl" id="signatureDataUrl">
+    <br><button type="submit">Cerrar orden</button>
+</form>
+
+<hr>
+<h3>Evidencias</h3>
+
+<!-- Fotos -->
+<div th:if="${order.photoPaths} != null and ${!#strings.isEmpty(order.photoPaths)}">
+    <div th:each="p : ${#strings.arraySplit(order.photoPaths, '\\|')}">
+        <img th:src="@{'/' + ${p}}" alt="foto" style="max-width:300px; border:1px solid #ddd; margin:6px;">
+    </div>
+</div>
+<div th:if="${order.photoPaths} == null or ${#strings.isEmpty(order.photoPaths)}">
+    <em>Sin fotos adjuntas</em>
+</div>
+
+<!-- Firma -->
+<div th:if="${order.signaturePath} != null and ${!#strings.isEmpty(order.signaturePath)}">
+    <h4>Firma</h4>
+    <img th:src="@{'/' + ${order.signaturePath}}" alt="firma" style="max-width:300px; border:1px solid #ddd;">
+</div>
+
+
+<p><a href="/assets">Volver</a></p>
+
+<script>
+    const c = document.getElementById('sig');
+    const ctx = c.getContext('2d'); let drawing=false;
+    c.addEventListener('mousedown',()=>{drawing=true; ctx.beginPath();});
+    c.addEventListener('mouseup',()=>drawing=false);
+    c.addEventListener('mousemove',e=>{
+      if(!drawing) return;
+      const r=c.getBoundingClientRect();
+      ctx.lineWidth=2; ctx.lineCap='round';
+      ctx.lineTo(e.clientX-r.left, e.clientY-r.top);
+      ctx.stroke(); ctx.beginPath();
+      ctx.moveTo(e.clientX-r.left, e.clientY-r.top);
+    });
+    function clearSig(){ ctx.clearRect(0,0,c.width,c.height); }
+    function attachSig(){ document.getElementById('signatureDataUrl').value=c.toDataURL('image/png'); return true; }
+</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Seguimiento GPS</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <style>
+        body { margin:0; font-family: system-ui, sans-serif; }
+        .topbar { display:flex; gap:.75rem; padding:.75rem 1rem; align-items:center; border-bottom:1px solid #eee; background:#fafafa; flex-wrap:wrap; }
+        .topbar > * { font-size:.95rem; }
+        .chip { padding:.25rem .5rem; border:1px solid #ddd; border-radius:999px; background:#fff; }
+        #map { height: calc(100vh - 64px); }
+    </style>
+</head>
+<body>
+<div class="topbar">
+    <strong>Seguimiento GPS</strong>
+
+    <span class="chip">
+    Cliente:
+    <input id="f-client" type="text" placeholder="Nombre del cliente">
+  </span>
+
+    <span class="chip">
+    Contrato:
+    <select id="f-contract">
+      <option value="">(Todos)</option>
+      <option th:each="c: ${contracts}" th:value="${c.id}" th:text="${c.code + ' — ' + c.clientName}">Contrato</option>
+    </select>
+  </span>
+
+    <span class="chip">
+    Estado:
+    <select id="f-status">
+      <option value="">(Todos)</option>
+      <option th:each="s: ${statuses}" th:value="${s}" th:text="${s}">Estado</option>
+    </select>
+  </span>
+
+    <span class="chip">
+    Refrescar:
+    <select id="f-refresh">
+      <option value="5">5s</option>
+      <option value="10" th:selected="${refreshSeconds==10}">10s</option>
+      <option value="15" th:selected="${refreshSeconds==15}">15s</option>
+      <option value="30" th:selected="${refreshSeconds==30}">30s</option>
+      <option value="60" th:selected="${refreshSeconds==60}">60s</option>
+    </select>
+  </span>
+
+    <button id="btn-apply">Aplicar</button>
+    <span id="lbl-count" style="margin-left:auto;color:#666;"></span>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+    const map = L.map('map').setView([14.62,-90.52], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+
+    const markers = new Map();
+
+    function qs() {
+      const client = document.getElementById('f-client').value.trim();
+      const contractId = document.getElementById('f-contract').value;
+      const status = document.getElementById('f-status').value;
+      const p = new URLSearchParams();
+      if (client) p.set('client', client);
+      if (contractId) p.set('contractId', contractId);
+      if (status) p.set('status', status);
+      return p.toString();
+    }
+
+    async function loadData() {
+      const res = await fetch('/api/gps' + (qs() ? ('?' + qs()) : ''));
+      const data = await res.json();
+
+      const seen = new Set();
+      data.forEach(a => {
+        if (a.lat==null || a.lng==null) return;
+        const id = a.id;
+        seen.add(id);
+        const html = `
+          <div><strong>${a.assetId ?? '(sin código)'}</strong></div>
+          <div>Modelo: ${a.model ?? '-'}</div>
+          <div>Actualizado: ${a.lastGpsAt ?? '-'}</div>
+        `;
+        if (markers.has(id)) {
+          markers.get(id).setLatLng([a.lat, a.lng]).setPopupContent(html);
+        } else {
+          markers.set(id, L.marker([a.lat, a.lng]).addTo(map).bindPopup(html));
+        }
+      });
+
+      // limpiar los que ya no vienen
+      for (const [id, mk] of markers) {
+        if (!seen.has(id)) { map.removeLayer(mk); markers.delete(id); }
+      }
+
+      if (markers.size > 0) {
+        const group = L.featureGroup([...markers.values()]);
+        map.fitBounds(group.getBounds().pad(0.2), {animate:false});
+      }
+
+      document.getElementById('lbl-count').textContent = `${markers.size} activo(s) en mapa`;
+    }
+
+    let timer=null;
+    function applyRefresh(){
+      if (timer) clearInterval(timer);
+      const s = parseInt(document.getElementById('f-refresh').value||'10',10);
+      timer=setInterval(loadData, s*1000);
+    }
+
+    document.getElementById('btn-apply').addEventListener('click', ()=>{ loadData(); applyRefresh(); });
+    document.getElementById('f-refresh').addEventListener('change', applyRefresh);
+
+    // inicio
+    loadData();
+    applyRefresh();
+</script>
+</body>
+</html>
