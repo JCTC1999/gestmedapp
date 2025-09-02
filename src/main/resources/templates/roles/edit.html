@@ -2,36 +2,248 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
-    <title th:text="${role.id} == null ? 'Nuevo rol' : 'Editar rol'">Rol</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${role.id == null ? 'Nuevo Rol' : 'Editar Rol'}">Formulario de Rol</title>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #0056b3;
+            border-bottom: 2px solid #eeeeee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        /* --- Estilos para el formulario --- */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        /* --- Estructura para los permisos --- */
+        fieldset {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        legend {
+            font-weight: 600;
+            font-size: 18px;
+            color: #333;
+            padding: 0 10px;
+        }
+        .permissions-grid {
+            display: grid;
+            /* Crea columnas responsivas: se ajustan automáticamente */
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px; /* Espacio entre las tarjetas de permisos */
+        }
+        .permission-module {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #fdfdfd;
+        }
+        .permission-module h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        /* --- Estilo para checkboxes personalizados --- */
+        .custom-checkbox {
+            display: block;
+            position: relative;
+            padding-left: 35px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            user-select: none;
+        }
+        /* Ocultar el checkbox por defecto */
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        /* Crear el contenedor del checkbox personalizado */
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 22px;
+            width: 22px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .custom-checkbox:hover input ~ .checkmark {
+            background-color: #ccc;
+        }
+        /* Cambiar el fondo cuando está seleccionado */
+        .custom-checkbox input:checked ~ .checkmark {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        /* Crear la marca de verificación (oculta por defecto) */
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+        /* Mostrar la marca cuando está seleccionado */
+        .custom-checkbox input:checked ~ .checkmark:after {
+            display: block;
+        }
+        /* Estilo de la marca de verificación */
+        .custom-checkbox .checkmark:after {
+            left: 7px;
+            top: 3px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+
+        /* --- Botones de acción --- */
+        .form-actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+        }
+        .button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .button.primary {
+            background-color: #28a745;
+            color: white;
+        }
+        .button.secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-<h1 th:text="${role.id} == null ? 'Nuevo rol' : 'Editar rol'"></h1>
 
-<form th:action="@{/admin/roles}" th:object="${role}" method="post">
-    <!-- El id solo si existe (editar). Importante: *{id}, no ${id} -->
-    <input type="hidden" th:if="*{id} != null" th:field="*{id}"/>
+<div class="container">
+    <h2 th:text="${role.id == null ? 'Crear Nuevo Rol' : 'Editar Rol'}">Formulario de Rol</h2>
 
-    <div>
-        <label>Nombre del rol (ej. WAREHOUSE)</label>
-        <input type="text" th:field="*{roleName}" required/>
-    </div>
+    <form th:action="@{/admin/roles}" th:object="${role}" method="post">
+        <input type="hidden" th:if="*{id != null}" th:field="*{id}"/>
 
-    <fieldset>
-        <legend>Permisos</legend>
-        <label><input type="checkbox" th:field="*{canAssetsRead}"/> Activos - Ver</label><br/>
-        <label><input type="checkbox" th:field="*{canAssetsWrite}"/> Activos - Editar</label><br/>
-        <label><input type="checkbox" th:field="*{canInventoryRead}"/> Inventario - Ver</label><br/>
-        <label><input type="checkbox" th:field="*{canInventoryWrite}"/> Inventario - Editar</label><br/>
-        <label><input type="checkbox" th:field="*{canContractsRead}"/> Contratos - Ver</label><br/>
-        <label><input type="checkbox" th:field="*{canContractsWrite}"/> Contratos - Editar</label><br/>
-        <label><input type="checkbox" th:field="*{canMaintenanceRead}"/> Mantenimiento - Ver</label><br/>
-        <label><input type="checkbox" th:field="*{canMaintenanceWrite}"/> Mantenimiento - Editar</label><br/>
-        <label><input type="checkbox" th:field="*{canReportsRead}"/> Reportes - Ver</label><br/>
-    </fieldset>
+        <div class="form-group">
+            <label for="roleName">Nombre del Rol (Ej: BODEGA, FINANZAS)</label>
+            <input type="text" id="roleName" th:field="*{roleName}" required placeholder="Escriba un nombre único para el rol"/>
+        </div>
 
-    <button type="submit">Guardar</button>
-    <a th:href="@{/admin/roles}">Cancelar</a>
-</form>
+        <fieldset>
+            <legend>Permisos</legend>
+            <div class="permissions-grid">
+
+                <div class="permission-module">
+                    <h4>Activos</h4>
+                    <label class="custom-checkbox">Activos - Ver
+                        <input type="checkbox" th:field="*{canAssetsRead}"/>
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="custom-checkbox">Activos - Crear/Editar
+                        <input type="checkbox" th:field="*{canAssetsWrite}"/>
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+
+                <div class="permission-module">
+                    <h4>Inventario</h4>
+                    <label class="custom-checkbox">Inventario - Ver
+                        <input type="checkbox" th:field="*{canInventoryRead}"/>
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="custom-checkbox">Inventario - Editar
+                        <input type="checkbox" th:field="*{canInventoryWrite}"/>
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+
+                <div class="permission-module">
+                    <h4>Contratos</h4>
+                    <label class="custom-checkbox">Contratos - Ver
+                        <input type="checkbox" th:field="*{canContractsRead}"/>
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="custom-checkbox">Contratos - Crear/Editar
+                        <input type="checkbox" th:field="*{canContractsWrite}"/>
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+
+                <div class="permission-module">
+                    <h4>Mantenimiento</h4>
+                    <label class="custom-checkbox">Mantenimiento - Ver
+                        <input type="checkbox" th:field="*{canMaintenanceRead}"/>
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="custom-checkbox">Mantenimiento - Crear/Editar
+                        <input type="checkbox" th:field="*{canMaintenanceWrite}"/>
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+
+                <div class="permission-module">
+                    <h4>Reportes</h4>
+                    <label class="custom-checkbox">Reportes - Ver
+                        <input type="checkbox" th:field="*{canReportsRead}"/>
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <button type="submit" class="button primary">Guardar Rol</button>
+            <a th:href="@{/admin/roles}" class="button secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
 
 </body>
 </html>
