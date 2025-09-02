@@ -1,31 +1,186 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Historial</title></head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Movimientos</title>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 960px; /* Un poco más ancho para la tabla */
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px H10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #0056b3;
+            border-bottom: 2px solid #eeeeee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        /* --- Estilos para el formulario de filtros --- */
+        .filter-form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            border: 1px solid #dee2e6;
+        }
+        .filter-form form {
+            display: flex;
+            flex-wrap: wrap; /* Permite que los elementos pasen a la siguiente línea en pantallas pequeñas */
+            gap: 15px; /* Espacio entre los grupos de filtros */
+            align-items: flex-end; /* Alinea los elementos en la parte inferior */
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .form-group input {
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* --- Estilos para la tabla de historial --- */
+        .history-table {
+            overflow-x: auto; /* Agrega scroll horizontal si la tabla no cabe */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse; /* Une los bordes de las celdas */
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        thead th {
+            background-color: #007bff;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        /* Efecto de "cebra" para mejorar la legibilidad de las filas */
+        tbody tr:nth-of-type(even) {
+            background-color: #f9f9f9;
+        }
+        tbody tr:hover {
+            background-color: #f1f1f1; /* Resalta la fila al pasar el cursor */
+        }
+        /* Estilo para la fila que indica que no hay movimientos */
+        .no-results-row td {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-style: italic;
+        }
+
+        /* --- Estilos para los botones y enlaces --- */
+        .footer-actions {
+            margin-top: 25px;
+        }
+        button, a.button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 15px;
+            cursor: pointer;
+            text-align: center;
+            color: white;
+            display: inline-block; /* Para que los enlaces se comporten como botones */
+        }
+        button[type="submit"] {
+            background-color: #28a745; /* Verde */
+        }
+        a.button.secondary {
+            background-color: #6c757d; /* Gris */
+        }
+        a.button.back {
+             background-color: #f8f9fa;
+             color: #333;
+             border: 1px solid #ccc;
+        }
+    </style>
+</head>
 <body>
-<h2 th:text="'Historial de movimientos — ' + ${asset.assetId}">Historial</h2>
 
-<form method="get">
-    <label>Desde: <input type="date" name="from" th:value="${from}"/></label>
-    <label>Hasta: <input type="date" name="to" th:value="${to}"/></label>
-    <label>Ubicación contiene: <input type="text" name="location" th:value="${location}"/></label>
-    <button type="submit">Filtrar</button>
-    <a th:href="@{'/assets/' + ${asset.id} + '/history'}">Quitar filtros</a>
-</form>
+<div class="container">
+    <h2 th:text="'Historial de movimientos — ' + ${asset.assetId}">Historial de Movimientos</h2>
 
-<table border="1" style="margin-top:10px; width:100%">
-    <tr>
-        <th>Fecha/Hora</th><th>Desde</th><th>Hacia</th><th>Motivo</th><th>Por</th>
-    </tr>
-    <tr th:each="m : ${movs}">
-        <td th:text="${#temporals.format(m.movedAt, 'yyyy-MM-dd HH:mm')}">2025-01-01 10:00</td>
-        <td th:text="${m.fromLocation}">A</td>
-        <td th:text="${m.toLocation}">B</td>
-        <td th:text="${m.reason}">Cambio</td>
-        <td th:text="${m.performedBy}">admin</td>
-    </tr>
-    <tr th:if="${#lists.isEmpty(movs)}"><td colspan="5">Sin movimientos.</td></tr>
-</table>
+    <div class="filter-form">
+        <form method="get">
+            <div class="form-group">
+                <label for="from">Desde:</label>
+                <input id="from" type="date" name="from" th:value="${from}"/>
+            </div>
+            <div class="form-group">
+                <label for="to">Hasta:</label>
+                <input id="to" type="date" name="to" th:value="${to}"/>
+            </div>
+            <div class="form-group">
+                <label for="location">Ubicación contiene:</label>
+                <input id="location" type="text" name="location" th:value="${location}"/>
+            </div>
+            <div class="form-actions">
+                <button type="submit">Filtrar</button>
+                <a th:href="@{'/assets/' + ${asset.id} + '/history'}" class="button secondary">Quitar filtros</a>
+            </div>
+        </form>
+    </div>
 
-<p><a th:href="@{/assets}">Volver</a></p>
+    <div class="history-table">
+        <table>
+            <thead>
+            <tr>
+                <th>Fecha/Hora</th>
+                <th>Desde</th>
+                <th>Hacia</th>
+                <th>Motivo/Nota</th>
+                <th>Realizado Por</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="m : ${movs}">
+                <td th:text="${#temporals.format(m.movedAt, 'yyyy-MM-dd HH:mm')}">2025-01-01 10:00</td>
+                <td th:text="${m.fromLocation}">Ubicación A</td>
+                <td th:text="${m.toLocation}">Ubicación B</td>
+                <td th:text="${m.reason}">Mantenimiento programado</td>
+                <td th:text="${m.performedBy}">admin@empresa.com</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(movs)}" class="no-results-row">
+                <td colspan="5">No se encontraron movimientos para los filtros seleccionados.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-actions">
+        <a th:href="@{/assets}" class="button back">Volver a Activos</a>
+    </div>
+</div>
+
 </body>
 </html>

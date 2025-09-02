@@ -1,26 +1,83 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Nueva orden</title></head>
-<body>
-<h2>Nueva orden de mantenimiento</h2>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Nueva Orden de Mantenimiento</title>
 
-<div>
-  <p><b>Activo:</b> <span th:text="${asset.assetId}"></span> — <span th:text="${asset.model}"></span></p>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .form-card {
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card form-card">
+                <div class="card-body p-5">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h1 class="card-title fw-bold">Nueva Orden de Mantenimiento</h1>
+                            <p class="text-muted">Crea una nueva orden para un activo específico.</p>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info py-2" role="alert">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-box-seam me-2"></i>Activo: <span th:text="${asset.assetId}"></span> — <span th:text="${asset.model}"></span>
+                        </h5>
+                    </div>
+
+                    <form th:action="@{/maintenance}" method="post">
+                        <input type="hidden" name="assetId" th:value="${asset.id}">
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label for="type" class="form-label">Tipo de Mantenimiento</label>
+                                <select id="type" name="type" class="form-select" required>
+                                    <option value="PREVENTIVO">Preventivo</option>
+                                    <option value="CORRECTIVO">Correctivo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="responsible" class="form-label">Responsable</label>
+                                <input id="responsible" name="responsible" type="text" class="form-control" placeholder="Nombre del técnico o equipo" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date" class="form-label">Fecha Programada</label>
+                                <input id="date" name="date" type="date" class="form-control" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="tasks" class="form-label">Tareas a Realizar</label>
+                                <textarea id="tasks" name="tasks" class="form-control" rows="4" placeholder="Describe las tareas, inspecciones o reparaciones..." required></textarea>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="/assets" class="btn btn-outline-secondary btn-lg"><i class="bi bi-x-circle me-2"></i>Cancelar</a>
+                            <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-tools me-2"></i>Crear Orden</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<form th:action="@{/maintenance}" method="post">
-  <input type="hidden" name="assetId" th:value="${asset.id}">
-  <label>Tipo:
-    <select name="type" required>
-      <option th:value="PREVENTIVO">Preventivo</option>
-      <option th:value="CORRECTIVO">Correctivo</option>
-    </select>
-  </label><br>
-  <label>Responsable: <input name="responsible" required></label><br>
-  <label>Fecha programada: <input type="date" name="date" required></label><br>
-  <label>Tareas:<br><textarea name="tasks" rows="4" cols="60" required></textarea></label><br>
-  <button type="submit">Crear orden</button>
-  <a href="/assets">Cancelar</a>
-</form>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

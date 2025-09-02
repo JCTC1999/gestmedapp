@@ -67,6 +67,7 @@ public class MaintenanceController {
         model.addAttribute("pendientes", pendientes);
         model.addAttribute("enCurso", enCurso);
         model.addAttribute("finalizadas", finalizadas);
+        model.addAttribute("asset", asset);
         return "maintenance/showmaintenancebyasset";
     }
 

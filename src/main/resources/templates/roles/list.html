@@ -1,21 +1,155 @@
-<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org"><head><title>Roles</title></head><body>
-<h2>Roles</h2>
-<p><a href="/admin/roles/new">Nuevo rol</a> | <a href="/">Inicio</a></p>
-<table border="1" cellpadding="6">
-    <tr><th>Rol</th><th>Permisos</th><th></th></tr>
-    <tr th:each="r : ${roles}">
-        <td th:text="${r.roleName}"></td>
-        <td>
-            <span th:if="${r.canAssetsWrite}">Assets✏️</span>
-            <span th:if="${r.canContractsWrite}">Contracts✏️</span>
-            <!-- etc. -->
-        </td>
-        <td>
-            <a th:href="@{'/admin/roles/' + ${r.id}}">Editar</a>
-            <form th:action="@{'/admin/roles/' + ${r.id} + '/delete'}" method="post" style="display:inline">
-                <button type="submit">Eliminar</button>
-            </form>
-        </td>
-    </tr>
-</table>
-</body></html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Roles</title>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* --- Cabecera de la página --- */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eeeeee;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        .page-header h2 {
+            margin: 0;
+            color: #0056b3;
+        }
+
+        /* --- Tabla de roles --- */
+        .roles-table {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle; /* Alinea verticalmente el contenido */
+        }
+        thead th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* --- Insignias para permisos --- */
+        .permission-badge {
+            display: inline-block;
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 13px;
+            margin: 2px;
+            font-weight: 500;
+        }
+
+        /* --- Acciones (botones) --- */
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* --- Estilos base para botones y enlaces --- */
+        .button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            color: white;
+            display: inline-block;
+        }
+        .button.primary { background-color: #007bff; }
+        .button.secondary { background-color: #6c757d; }
+        .button.danger { background-color: #dc3545; }
+
+        /* Eliminar el estilo por defecto del botón dentro de un formulario */
+        form {
+            margin: 0;
+        }
+        form button {
+            font-family: inherit; /* Hereda la fuente del resto de la página */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="page-header">
+        <h2>Roles y Permisos</h2>
+        <div>
+            <a href="/admin/roles/new" class="button primary">✚ Nuevo Rol</a>
+            <a href="/" style="margin-left: 15px; text-decoration: none;">Inicio</a>
+        </div>
+    </div>
+
+    <div class="roles-table">
+        <table>
+            <thead>
+            <tr>
+                <th>Rol</th>
+                <th>Permisos Asignados</th>
+                <th style="width: 180px;">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${roles}">
+                <td th:text="${r.roleName}">Admin</td>
+                <td>
+                    <span class="permission-badge" th:if="${r.canAssetsWrite}">Gestión Activos ✏️</span>
+                    <span class="permission-badge" th:if="${r.canContractsWrite}">Gestión Contratos ✏️</span>
+                    <span class="permission-badge" th:if="${r.canUsersRead}">Ver Usuarios 👁️</span>
+                    <span class="permission-badge" th:if="${r.canUsersWrite}">Gestión Usuarios ✏️</span>
+                </td>
+                <td>
+                    <div class="actions">
+                        <a th:href="@{'/admin/roles/' + ${r.id}}" class="button secondary">Editar</a>
+                        <form th:action="@{'/admin/roles/' + ${r.id} + '/delete'}" method="post" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este rol?');">
+                            <button type="submit" class="button danger">Eliminar</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(roles)}">
+                <td colspan="3" style="text-align: center; color: #777; padding: 20px;">No hay roles definidos.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

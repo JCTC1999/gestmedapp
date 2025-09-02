@@ -1,37 +1,93 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Contratos</title></head>
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Gestión de Contratos</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            padding-top: 2rem;
+        }
+        .table-container {
+            border-radius: 10px;
+            overflow: hidden; /* Esto ayuda a que los bordes redondeados se apliquen a la tabla */
+            box-shadow: 0 4px 8px rgba(0,0,0,.08);
+            background-color: white;
+        }
+        th, td {
+            vertical-align: middle;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .action-buttons a {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
 <body>
-<h2>Contratos</h2>
 
-<p><a href="/contracts/new">Nuevo contrato</a> | <a href="/">Volver al Inicio</a></p>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-5 fw-bold">Contratos</h1>
+            <p class="fs-5 text-muted">Revisa y gestiona los contratos de servicio con tus clientes.</p>
+        </div>
+        <div>
+            <a href="/contracts/new" class="btn btn-primary me-2"><i class="bi bi-plus-circle"></i> Nuevo Contrato</a>
+            <a href="/" class="btn btn-secondary"><i class="bi bi-house-door"></i> Volver al Inicio</a>
+        </div>
+    </div>
 
-<table border="1" cellpadding="6">
-    <thead>
-    <tr>
-        <th>Código</th>
-        <th>Cliente</th>
-        <th>Inicio</th>
-        <th>Fin</th>
-        <th>Alertas (días)</th>
-        <th>Estado</th>
-        <th>Activos</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="c : ${contracts}">
-        <td th:text="${c.code}">C-001</td>
-        <td th:text="${c.clientName}">Cliente XYZ</td>
-        <td th:text="${c.startDate}">2025-01-01</td>
-        <td th:text="${c.endDate}">2025-12-31</td>
-        <td th:text="${c.alertDays}">30</td>
-        <td th:text="${c.status}">VIGENTE</td>
+    <div class="table-container">
+        <table class="table table-striped table-hover align-middle mb-0">
+            <thead>
+            <tr class="table-dark">
+                <th>Código</th>
+                <th>Cliente</th>
+                <th>Inicio</th>
+                <th>Fin</th>
+                <th>Alertas (días)</th>
+                <th>Estado</th>
+                <th>Activos</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${contracts}">
+                <td th:text="${c.code}"></td>
+                <td th:text="${c.clientName}"></td>
+                <td th:text="${c.startDate}"></td>
+                <td th:text="${c.endDate}"></td>
+                <td th:text="${c.alertDays}"></td>
+                <td>
+                        <span th:classappend="${c.status eq 'VIGENTE'} ? 'bg-success' : 'bg-warning'"
+                              class="badge rounded-pill status-badge"
+                              th:text="${c.status}"></span>
+                </td>
+                <td>
+                    <span th:each="a : ${c.assets}" class="badge bg-light text-dark me-1" th:text="${a.assetId}"></span>
+                </td>
+                <td class="action-buttons">
+                    <a href="#" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
+                    <a href="#" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
-        <td>
-            <span th:each="a : ${c.assets}" th:text="${a.assetId} + ' '" />
-        </td>
-    </tr>
-    </tbody>
-</table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
