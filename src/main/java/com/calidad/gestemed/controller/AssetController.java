@@ -5,6 +5,7 @@ import com.calidad.gestemed.domain.AssetMovement;
 import com.calidad.gestemed.repo.AssetMovementRepo;
 import com.calidad.gestemed.repo.AssetRepo;
 import com.calidad.gestemed.service.AssetService;
+import com.calidad.gestemed.service.impl.AzureBlobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,27 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.calidad.gestemed.domain.Asset;
+import com.calidad.gestemed.domain.AssetMovement;
+import com.calidad.gestemed.repo.AssetMovementRepo;
+import com.calidad.gestemed.repo.AssetRepo;
+import com.calidad.gestemed.service.AssetService;
+import com.calidad.gestemed.service.impl.AzureBlobService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+
+import java.security.Principal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/assets")
@@ -25,6 +47,9 @@ public class AssetController {
     private final AssetService assetService;
     private final AssetMovementRepo movementRepo;
     private final AssetRepo assetRepo;
+    private final AzureBlobService azureBlobService;
+
+
 
     @GetMapping
     public String list(Model model){
@@ -40,7 +65,24 @@ public class AssetController {
 
     @PostMapping
     public String create(Asset asset, @RequestParam("photos") List<MultipartFile> photos, Authentication auth){
-        assetService.create(asset, photos, (auth!=null?auth.getName():"admin"));
+        // En lugar de pasar las fotos directamente al servicio, las subimos a Azure aquí
+        String photosUrls = photos.stream()
+                .filter(f -> !f.isEmpty())
+                .map(f -> {
+                    try {
+                        return azureBlobService.uploadFile(f);
+                    } catch (IOException e) {
+                        System.out.println("[WARN] No se pudo subir la foto: " + e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(url -> url != null)
+                .collect(Collectors.joining("|"));
+
+        // Asignamos las URLs al asset
+        asset.setPhotoPaths(photosUrls);
+
+        assetService.create(asset, (auth!=null?auth.getName():"admin"));
         return "redirect:/assets?created";
     }
 

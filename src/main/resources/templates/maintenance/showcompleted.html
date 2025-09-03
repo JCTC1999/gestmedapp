@@ -98,7 +98,7 @@
                     <div th:if="${order.photoPaths} != null and ${!#strings.isEmpty(order.photoPaths)}">
                         <div class="photo-grid">
                             <div class="photo-container" th:each="p : ${#strings.arraySplit(order.photoPaths, '\\|')}">
-                                <img th:src="@{'/' + ${p}}" alt="Evidencia fotográfica">
+                                <img th:src="${p}" alt="Evidencia fotográfica">
                             </div>
                         </div>
                     </div>
@@ -114,7 +114,7 @@
                 <div class="card-body">
                     <h5 class="card-title fw-bold mb-3"><i class="bi bi-pen me-2"></i>Firma de Conformidad</h5>
                     <div th:if="${order.signaturePath} != null and ${!#strings.isEmpty(order.signaturePath)}">
-                        <img th:src="@{'/' + ${order.signaturePath}}" alt="Firma" class="signature-img">
+                        <img th:src="${order.signaturePath}" alt="Firma" class="signature-img">
                     </div>
                     <div th:if="${order.signaturePath} == null or ${#strings.isEmpty(order.signaturePath)}">
                         <div class="alert alert-secondary text-center mb-0" role="alert">

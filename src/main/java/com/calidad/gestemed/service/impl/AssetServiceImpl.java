@@ -19,15 +19,12 @@ public class AssetServiceImpl implements AssetService {
     private final AssetRepo assetRepo;
 
     @Override
-    public Asset create(Asset a, List<MultipartFile> photos, String createdBy) {
+    public Asset create(Asset a, String createdBy) {
         if (assetRepo.existsByAssetId(a.getAssetId()))
             throw new IllegalArgumentException("ID único ya existe");
         a.setCreatedAt(LocalDateTime.now());
         a.setLastGpsAt(LocalDateTime.now());
         a.setCreatedBy(createdBy);
-
-        String paths = saveFiles(photos);
-        a.setPhotoPaths(paths);
         return assetRepo.save(a);
     }
 

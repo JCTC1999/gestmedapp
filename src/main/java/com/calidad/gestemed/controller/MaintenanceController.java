@@ -20,6 +20,26 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.calidad.gestemed.domain.*;
+import com.calidad.gestemed.repo.*;
+import com.calidad.gestemed.service.impl.AzureBlobService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Base64;
+import java.util.UUID;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Controller @RequiredArgsConstructor
 @RequestMapping("/maintenance")
@@ -28,6 +48,7 @@ public class MaintenanceController {
     private final AssetRepo assetRepo;
     private final PartRepo partRepo;
     private final PartConsumptionRepo consRepo;
+    private final AzureBlobService azureBlobService;
 
     @GetMapping("/new")
     public String formNew(@RequestParam Long assetId, Model model) {
@@ -127,58 +148,41 @@ public class MaintenanceController {
 
         var order = orderRepo.findById(id).orElseThrow();
 
-        // Carpeta destino: uploads/maintenance/{id}/
-        String baseDir = System.getProperty("user.dir");
-        Path orderDir = Paths.get(baseDir, "uploads", "maintenance", String.valueOf(id));
-        try {
-            Files.createDirectories(orderDir);
-        } catch (Exception e) {
-            model.addAttribute("error", "No se pudo crear carpeta de evidencias: " + e.getMessage());
-            model.addAttribute("order", order);
-            return "maintenance/detail";
-        }
-
-        // 2.1) Guardar FOTOS múltiples
+        // 2.1) Subir FOTOS múltiples a Azure Blob Storage
         if (photos != null) {
             for (MultipartFile f : photos) {
                 if (f != null && !f.isEmpty()) {
-                    String clean = sanitize(f.getOriginalFilename());
-                    if (clean == null || clean.isBlank()) clean = "evidencia_" + System.currentTimeMillis() + ".bin";
-                    String filename = System.currentTimeMillis() + "_" + clean;
-                    Path dst = orderDir.resolve(filename);
-                    try (InputStream in = f.getInputStream()) {
-                        Files.copy(in, dst, StandardCopyOption.REPLACE_EXISTING);
-                        // Ruta relativa servible por HTTP
-                        String rel = Paths.get("maintenance", String.valueOf(id), filename).toString().replace("\\","/");
-                        order.setPhotoPaths(appendPath(order.getPhotoPaths(), rel));  // <-- acumulamos en String
-                    } catch (Exception ex) {
-                        System.out.println("[WARN] No se pudo guardar foto: " + ex.getMessage());
+                    try {
+                        String imageUrl = azureBlobService.uploadFile(f);
+                        order.setPhotoPaths(appendPath(order.getPhotoPaths(), imageUrl));
+                    } catch (IOException ex) {
+                        System.out.println("[WARN] No se pudo subir la foto: " + ex.getMessage());
                     }
                 }
             }
         }
 
-        // 2.2) Guardar FIRMA (data URL base64)
+        // 2.2) Subir FIRMA a Azure Blob Storage (data URL base64)
         if (signatureDataUrl != null && signatureDataUrl.startsWith("data:image")) {
             try {
                 String b64 = signatureDataUrl.substring(signatureDataUrl.indexOf(",") + 1);
                 byte[] png = Base64.getDecoder().decode(b64);
-                String fileName = "signature_" + System.currentTimeMillis() + ".png";
-                Path dst = orderDir.resolve(fileName);
-                Files.write(dst, png);
-                String rel = Paths.get("maintenance", String.valueOf(id), fileName).toString().replace("\\","/");
-                order.setSignaturePath(rel);
-            } catch (Exception e) {
-                System.out.println("[WARN] No se pudo guardar firma: " + e.getMessage());
+
+                // Crear un MultipartFile temporal a partir de los bytes
+                MultipartFile signatureFile = new ByteArrayMultipartFile(png, "signature.png");
+                String signatureUrl = azureBlobService.uploadFile(signatureFile);
+                order.setSignaturePath(signatureUrl);
+            } catch (IOException e) {
+                System.out.println("[WARN] No se pudo subir la firma: " + e.getMessage());
             }
         }
 
         // 2.3) Cerrar orden
-        order.setStatus(MaintStatus.FINALIZADO);   // usa tu enum actual
+        order.setStatus(MaintStatus.FINALIZADO);
         order.setClosedAt(LocalDateTime.now());
         orderRepo.save(order);
 
-        return "redirect:/maintenance/" + id;
+        return "redirect:/assets";
     }
 
     // Helpers
@@ -193,5 +197,46 @@ public class MaintenanceController {
         if (existing == null || existing.isBlank()) return rel;
         // usamos '|' como separador
         return existing + "|" + rel;
+    }
+
+    // Clase auxiliar para convertir bytes[] a MultipartFile hay que sacarla y hacerla clase aparte
+    static class ByteArrayMultipartFile implements MultipartFile {
+        private final byte[] bytes;
+        private final String filename;
+
+        public ByteArrayMultipartFile(byte[] bytes, String filename) {
+            this.bytes = bytes;
+            this.filename = filename;
+        }
+
+        @Override
+        public String getName() { return filename; }
+
+        @Override
+        public String getOriginalFilename() { return filename; }
+
+        @Override
+        public String getContentType() { return "image/png"; }
+
+        @Override
+        public boolean isEmpty() { return bytes == null || bytes.length == 0; }
+
+        @Override
+        public long getSize() { return bytes.length; }
+
+        @Override
+        public byte[] getBytes() throws IOException { return bytes; }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return new ByteArrayInputStream(bytes);
+        }
+
+        @Override
+        public void transferTo(File dest) throws IOException, IllegalStateException {
+            try (FileOutputStream fos = new FileOutputStream(dest)) {
+                fos.write(bytes);
+            }
+        }
     }
 }
