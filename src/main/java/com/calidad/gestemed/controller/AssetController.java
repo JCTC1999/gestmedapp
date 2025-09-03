@@ -96,8 +96,8 @@ public class AssetController {
         Double fromLongitude = a.getLastLongitude();
 
         a.setInitialLocation(toLocation);
-        a.setLastLatitude(fromLatitude);
-        a.setLastLongitude(fromLongitude);
+        a.setLastLatitude(toLocationLatitude);
+        a.setLastLongitude(toLocationLongitude);
 
 
         assetRepo.save(a);
