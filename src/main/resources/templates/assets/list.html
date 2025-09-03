@@ -19,10 +19,26 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,.08);
             transition: transform 0.2s;
-            height: 100%; /* Asegura que todas las tarjetas tengan la misma altura */
+            height: 100%;
+            overflow: hidden;
         }
         .card:hover {
             transform: translateY(-5px);
+        }
+        .card-img-container {
+            width: 100%;
+            height: 200px;
+            background-color: #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .card-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; /* Asegura que la imagen se vea completa */
         }
         .card-body {
             display: flex;
@@ -38,7 +54,17 @@
             margin-bottom: 0.5rem;
         }
         .card-actions {
-            margin-top: auto; /* Empuja los botones al final de la tarjeta */
+            margin-top: auto;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .dropdown.dropup {
+            position: relative;
+        }
+        .dropdown.dropup .dropdown-menu {
+            top: auto !important;
+            bottom: 100%;
+            margin-bottom: 5px;
         }
     </style>
 </head>
@@ -61,6 +87,17 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         <div class="col" th:each="a: ${assets}">
             <div class="card">
+                <div class="card-img-container">
+                    <img th:if="${a.photoPaths} != null and !${#strings.isEmpty(a.photoPaths)}"
+                         th:src="@{${#strings.arraySplit(a.photoPaths, '\\|')[0]}}"
+                         alt="Foto del activo" class="card-img">
+
+                    <div th:unless="${a.photoPaths} != null and !${#strings.isEmpty(a.photoPaths)}"
+                         class="d-flex align-items-center justify-content-center h-100 w-100 text-muted">
+                        <i class="bi bi-camera-fill me-2"></i>Sin foto
+                    </div>
+                </div>
+
                 <div class="card-body">
                     <h5 class="card-title">
                         <span th:text="${a.model}">Modelo</span>
@@ -78,11 +115,12 @@
                     <div class="card-actions d-grid gap-2 d-md-flex justify-content-md-end">
                         <a th:href="@{'/assets/' + ${a.id} + '/move'}" class="btn btn-outline-primary btn-sm"><i class="bi bi-truck"></i> Mover</a>
                         <a th:href="@{'/assets/' + ${a.id} + '/history'}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-clock-history"></i> Historial</a>
-                        <div class="dropdown">
-                            <button class="btn btn-outline-info btn-sm dropdown-toggle" type="button" id="maintenanceDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+
+                        <div class="dropdown dropup">
+                            <button class="btn btn-outline-info btn-sm dropdown-toggle" type="button" th:id="${'maintenanceDropdown' + a.id}" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-tools"></i> Mantenimiento
                             </button>
-                            <ul class="dropdown-menu" aria-labelledby="maintenanceDropdown">
+                            <ul class="dropdown-menu" th:aria-labelledby="${'maintenanceDropdown' + a.id}">
                                 <li><a class="dropdown-item" th:href="@{'/maintenance/new?assetId=' + ${a.id}}">Crear</a></li>
                                 <li><a class="dropdown-item" th:href="@{/maintenance/showMaintenanceByAsset/{assetId}(assetId=${a.id})}">Ver</a></li>
                             </ul>
