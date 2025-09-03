@@ -43,7 +43,7 @@ public class MovementServiceImpl implements MovementService {
         // to exclusivo -> sumamos 1 día para incluir el final
         var toDt   = (to   == null) ? null : to.plusDays(1).atStartOfDay();
         var loc = (locationLike == null || locationLike.isBlank()) ? null : locationLike.trim();
-        return repo.search(assetId, fromDt, toDt, loc);
+        return repo.searchNative(assetId, fromDt, toDt, loc);
     }
 
     /** Purga automática diaria: NUNCA borra nada con menos de 90 días. */

@@ -19,25 +19,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.calidad.gestemed.domain.Asset;
-import com.calidad.gestemed.domain.AssetMovement;
-import com.calidad.gestemed.repo.AssetMovementRepo;
-import com.calidad.gestemed.repo.AssetRepo;
-import com.calidad.gestemed.service.AssetService;
-import com.calidad.gestemed.service.impl.AzureBlobService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 
-import java.security.Principal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
+
 import java.util.stream.Collectors;
 
 @Controller
@@ -48,8 +35,6 @@ public class AssetController {
     private final AssetMovementRepo movementRepo;
     private final AssetRepo assetRepo;
     private final AzureBlobService azureBlobService;
-
-
 
     @GetMapping
     public String list(Model model){
@@ -122,10 +107,10 @@ public class AssetController {
                 .asset(a)
                 .fromLocation(from)
                 .toLocation(toLocation)
-                        .fromLocationLatitude(fromLatitude)
-                        .fromLocationLongitude(fromLongitude)
-                        .toLocationLatitude(toLocationLatitude)
-                        .toLocationLongitude(toLocationLongitude)
+                .fromLocationLatitude(fromLatitude)
+                .fromLocationLongitude(fromLongitude)
+                .toLocationLatitude(toLocationLatitude)
+                .toLocationLongitude(toLocationLongitude)
                 .reason(note) // guarda tu nota en 'reason'
                 .performedBy(who!=null?who.getName():"system")
                 .movedAt(LocalDateTime.now())
@@ -141,13 +126,21 @@ public class AssetController {
                           @RequestParam(required=false) String location,
                           Model model) {
 
-        // Normalizamos a rangos [from, to) para el query
-        LocalDateTime f = (from==null? null: from.atStartOfDay());
-        LocalDateTime t = (to==null? null: to.plusDays(1).atStartOfDay());
-        String loc = (location==null || location.isBlank()) ? null : location.trim();
+        LocalDateTime fromDate = (from == null)
+                ? LocalDateTime.of(1, 1, 1, 0, 0)
+                : from.atStartOfDay();
+
+        LocalDateTime toDate = (to == null)
+                ? LocalDateTime.of(9999, 12, 31, 0, 0)
+                : to.plusDays(1).atStartOfDay();
+
+        // patrón siempre no-nulo
+        String pattern = (location == null || location.isBlank())
+                ? null
+                : "%" + location.trim() + "%";
 
         var asset = assetRepo.findById(id).orElseThrow();
-        var list = movementRepo.search(id, f, t, loc);  // usa el @Query del repo
+        var list  = movementRepo.searchNative(id, fromDate, toDate, pattern);
 
         model.addAttribute("asset", asset);
         model.addAttribute("movs", list);
@@ -157,4 +150,5 @@ public class AssetController {
 
         return "assets/history";
     }
+
 }
