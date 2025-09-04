@@ -1,10 +1,50 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><title>Importación exitosa</title></head>
-<body>
-<h2>Importación finalizada</h2>
-<p>Registros importados: <b th:text="${count}">0</b></p>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Importación Exitosa</title>
 
-<p><a href="/assets">Ver activos</a> | <a href="/import">Importar otro archivo</a> | <a href="/">Inicio</a></p>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .success-card {
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card text-center success-card">
+                <div class="card-header bg-success text-white py-4">
+                    <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
+                    <h2 class="mt-2 mb-0">Importación Finalizada</h2>
+                </div>
+                <div class="card-body p-5">
+                    <h4 class="card-title fw-bold mb-3">¡Éxito!</h4>
+                    <p class="card-text fs-5">
+                        Se han importado exitosamente <b th:text="${count}" class="text-success">0</b> registros a la base de datos.
+                    </p>
+                </div>
+                <div class="card-footer bg-light py-3 d-flex justify-content-center gap-2">
+                    <a href="/assets" class="btn btn-primary"><i class="bi bi-box-seam me-2"></i>Ver activos</a>
+                    <a href="/import" class="btn btn-outline-info"><i class="bi bi-upload me-2"></i>Importar otro archivo</a>
+                    <a href="/" class="btn btn-secondary"><i class="bi bi-house-door me-2"></i>Inicio</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
