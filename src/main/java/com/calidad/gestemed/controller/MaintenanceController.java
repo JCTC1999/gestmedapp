@@ -131,12 +131,14 @@ public class MaintenanceController {
         return "redirect:/maintenance/" + id;
     }
 
-    @PostMapping("/maintenance/{id}/start")
+    @PostMapping("/{id}/start")
     public String start(@PathVariable Long id) {
         var o = orderRepo.findById(id).orElseThrow();
-        o.setStatus(MaintStatus.EN_CURSO);
-        orderRepo.save(o);
-        return "redirect:/maintenance/"+id;
+        if (o.getStatus() == MaintStatus.PENDIENTE) {
+            o.setStatus(MaintStatus.EN_CURSO);
+            orderRepo.save(o);
+        }
+        return "redirect:/maintenance/" + id;
     }
 
 
