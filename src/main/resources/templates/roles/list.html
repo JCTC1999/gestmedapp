@@ -131,6 +131,9 @@
                 <td>
                     <span class="permission-badge" th:if="${r.canAssetsWrite}">Gestión Activos ✏️</span>
                     <span class="permission-badge" th:if="${r.canContractsWrite}">Gestión Contratos ✏️</span>
+                    <span class="permission-badge" th:if="${r.canInventoryWrite}">Gestión Inventario ✏️</span>
+                    <span class="permission-badge" th:if="${r.canMaintenanceWrite}">Gestión Mantenimientos ✏️</span>
+                    <span class="permission-badge" th:if="${r.canReportsRead}">Gestión Reportes ✏️</span>
                 </td>
                 <td>
                     <div class="actions">
