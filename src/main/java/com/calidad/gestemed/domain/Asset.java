@@ -47,3 +47,4 @@ public class Asset {
     private LocalDateTime lastGpsAt;
 }
 
+

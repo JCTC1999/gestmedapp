@@ -73,7 +73,6 @@
                 <td th:text="${p.minStock}" class="text-center"></td>
                 <td class="action-cell">
                     <form th:action="@{'/inventory/' + ${p.id} + '/move'}" method="post" class="d-flex align-items-center">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <div class="input-group input-group-sm me-2">
                             <input name="delta" type="number" class="form-control" placeholder="+/-" style="width: 80px;">
                             <input name="note" type="text" class="form-control" placeholder="Nota de movimiento" style="width: 150px;">

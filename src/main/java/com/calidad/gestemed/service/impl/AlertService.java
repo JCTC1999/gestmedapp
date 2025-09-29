@@ -13,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AlertService {
     private final ContractRepo contractRepo;
-    private final JavaMailSender mailSender; // si no configuras, inyecta opcionalmente
+    private final JavaMailSender mailSender;
 
     public List<Contract> contractsExpiringSoon() {
         LocalDate today = LocalDate.now();
@@ -27,18 +27,17 @@ public class AlertService {
                 .toList();
     }
 
-    public void sendExpiryEmailsIfConfigured(List<Contract> list) {
+    public void sendExpiryEmailsTo(List<Contract> list) {
         try {
             for (Contract c : list) {
                 // arma correo sencillo
                 var msg = new org.springframework.mail.SimpleMailMessage();
-                msg.setTo("demo@local"); // cambia o toma del cliente si lo guardas
+                msg.setTo("jctorrescalderon@gmail.com");
                 msg.setSubject("Contrato por vencer: " + c.getCode());
                 msg.setText("El contrato " + c.getCode() + " vence el " + c.getEndDate());
                 mailSender.send(msg);
             }
         } catch (Exception e) {
-            // si no hay SMTP configurado, no fallamos: solo log
             System.out.println("[ALERT] Emails no enviados (sin SMTP): " + e.getMessage());
         }
     }

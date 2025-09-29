@@ -13,7 +13,5 @@ public interface PartRepo extends JpaRepository<Part, Long> {
             "and p.stock < p.minStock")
     List<Part> findLowStock();
 
-    // (opcional) si alguna vez quieres umbral fijo:
-    // List<Part> findByStockLessThan(Integer threshold);
 }
 

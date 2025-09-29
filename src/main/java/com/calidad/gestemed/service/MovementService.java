@@ -11,3 +11,4 @@ public interface MovementService {
     void recordMove(Asset asset, String fromLoc, String toLoc, String reason, String performedBy);
     List<AssetMovement> history(Long assetId, LocalDate from, LocalDate to, String locationLike);
 }
+

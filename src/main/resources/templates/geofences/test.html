@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Actualizar GPS por ID de Negocio</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+    h2 { color: #333; }
+    label { display: block; margin-top: 10px; }
+    input[type="text"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+    button { padding: 10px 15px; margin-top: 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    #response { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background-color: #f9f9f9; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Actualizar Posición GPS</h2>
+
+  <form id="gpsForm">
+    <label for="assetId">ID de Activo (Asset ID):</label>
+    <input type="text" id="assetId" value="tu_asset_id_aqui" required>
+
+    <label for="lat">Latitud:</label>
+    <input type="text" id="lat" value="14.6" required>
+
+    <label for="lng">Longitud:</label>
+    <input type="text" id="lng" value="-90.5" required>
+
+    <button type="submit">Enviar Actualización</button>
+  </form>
+
+  <div id="response">
+    Esperando respuesta...
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('gpsForm');
+  const responseDiv = document.getElementById('response');
+
+  form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const assetBizId = document.getElementById('assetId').value;
+      const lat = document.getElementById('lat').value;
+      const lng = document.getElementById('lng').value;
+
+      if (!assetBizId || !lat || !lng) {
+          responseDiv.textContent = 'Por favor, completa todos los campos.';
+          return;
+      }
+
+      try {
+          const url = `/api/gps/biz/${assetBizId}?lat=${lat}&lng=${lng}`;
+          const r = await fetch(url, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              }
+          });
+
+          const data = await r.json();
+
+          if (r.ok) {
+              responseDiv.innerHTML = '<h3>¡Éxito!</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+          } else {
+              responseDiv.innerHTML = `<h3>Error ${r.status}: ${r.statusText}</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
+          }
+      } catch (error) {
+          responseDiv.innerHTML = '<h3>Error de conexión:</h3><p>Verifica que el servidor esté en funcionamiento.</p><pre>' + error + '</pre>';
+      }
+  });
+</script>
+
+</body>
+</html>

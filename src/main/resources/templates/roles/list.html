@@ -139,7 +139,7 @@
                     <div class="actions">
                         <a th:href="@{'/admin/roles/' + ${r.id}}" class="button secondary">Editar</a>
                         <form th:action="@{'/admin/roles/' + ${r.id} + '/delete'}" method="post" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este rol?');">
-                            <button type="submit" class="button danger">Eliminar</button>
+                            <!-- <button type="submit" class="button danger">Eliminar</button> -->
                         </form>
                     </div>
                 </td>

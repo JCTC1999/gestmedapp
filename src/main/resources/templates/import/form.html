@@ -56,17 +56,24 @@
 
                     <div class="mt-4">
                         <h3 class="fw-bold"><i class="bi bi-file-earmark-code me-2"></i>Formato de Archivo</h3>
-                        <p class="text-muted">Asegúrate de que tu archivo tenga el siguiente formato y orden de columnas:</p>
+                        <p class="text-muted">Tu archivo debe contener las siguientes 8 columnas en el orden indicado.</p>
 
-                        <p class="fw-bold text-dark">Columnas:</p>
-                        <pre>assetId,model,serialNumber,manufacturer,purchaseDate,initialLocation,value</pre>
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            El sistema completará automáticamente los campos **`id`**, **`createdAt`** y **`createdBy`**. No los incluyas en tu archivo.
+                        </div>
+
+                        <p class="fw-bold text-dark">Columnas Requeridas:</p>
+                        <pre>assetId,model,serialNumber,manufacturer,purchaseDate,initialLocation,value,photoPaths</pre>
 
                         <p class="fw-bold text-dark">Ejemplo CSV:</p>
                         <pre>
-assetId,model,serialNumber,manufacturer,purchaseDate,initialLocation,value
-1234567,Monitor X,MN-001,Acme,2025-01-05,Almacén 1,850.00
+assetId,model,serialNumber,manufacturer,purchaseDate,initialLocation,value,photoPaths
+1234567,Monitor X,MN-001,Acme,2025-01-05,Almacén 1,850.00,https://gestemedimages.blob.core.windows.net/maintenance-photos/monitor.jpg
 </pre>
-                        <p class="text-muted">Nota: La fecha debe estar en formato `yyyy-MM-dd`.</p>
+                        <p class="text-muted">
+                            Nota: La fecha debe estar en formato `yyyy-MM-dd`. El campo `photoPaths` debe contener una URL válida a la imagen.
+                        </p>
                     </div>
 
                     <div class="d-flex justify-content-start gap-2 mt-4">

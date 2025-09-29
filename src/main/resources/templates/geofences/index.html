@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Geocercas</title>
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="text"], select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #map {
+            height: 480px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        #saveBtn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #saveBtn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .assets-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .assets-list label {
+            display: block;
+            padding: 5px 0;
+            cursor: pointer;
+        }
+        .assets-list label:hover {
+            background-color: #e9e9e9;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        h2, h3 {
+            color: #555;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Crear y Gestionar Geocercas</h2>
+
+    <div class="form-section">
+        <label>Nombre: <input id="gname" type="text" placeholder="Nombre de la geocerca"></label>
+
+        <div class="input-group">
+            <label><input type="checkbox" id="aEnter" checked> Alertar al ENTRAR</label>
+            <label><input type="checkbox" id="aExit"  checked> Alertar al SALIR</label>
+        </div>
+
+        <div>
+            <label>Asignar a activos (opcional):</label>
+            <div class="assets-list" id="assetsContainer">
+                <div th:each="a : ${assets}">
+                    <label>
+                        <input type="checkbox" name="assetIds" th:value="${a.id}">
+                        <span th:text="${a.assetId} + ' — ' + ${a.model}"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+    <button id="saveBtn" disabled>Guardar geocerca</button>
+
+    <h3>Geocercas Existentes</h3>
+    <ul>
+        <li th:each="g : ${geofences}">
+            <b th:text="${g.name}"></b>
+            <small> [<span th:text="${g.active} ? 'activa' : 'inactiva'"></span>]</small>
+            <form th:action="@{'/api/geofences/' + ${g.id} + '/toggle'}" method="post" style="display:inline"
+                  onsubmit="return toggleSubmit(this);">
+                <input type="hidden" name="active" th:value="${!g.active}">
+                <button type="submit" th:text="${g.active} ? 'Desactivar' : 'Activar'"></button>
+            </form>
+        </li>
+    </ul>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script>
+    const map = L.map('map').setView([9.913729, -84.050903], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'©OSM'}).addTo(map);
+
+    const drawnItems = new L.FeatureGroup().addTo(map);
+    const drawControl = new L.Control.Draw({
+      edit: { featureGroup: drawnItems, edit: true, remove: true },
+      draw: { marker:false, circle:false, rectangle:false, circlemarker:false, polyline:false, polygon:true }
+    });
+    map.addControl(drawControl);
+
+    let polygon = null;
+    map.on(L.Draw.Event.CREATED, e => {
+      drawnItems.clearLayers();
+      polygon = e.layer; drawnItems.addLayer(polygon);
+      document.getElementById('saveBtn').disabled = false;
+    });
+    map.on(L.Draw.Event.EDITED, e => { /* mantener polygon actualizado */ });
+
+    function collectPolygonJson() {
+      if(!polygon) return null;
+      const latlngs = polygon.getLatLngs()[0].map(p => ({lat:p.lat, lng:p.lng}));
+      if(latlngs.length>0 && (latlngs[0].lat!==latlngs.at(-1).lat || latlngs[0].lng!==latlngs.at(-1).lng)){
+        latlngs.push(latlngs[0]);
+      }
+      return JSON.stringify(latlngs);
+    }
+
+    document.getElementById('saveBtn').onclick = async () => {
+      const name   = document.getElementById('gname').value.trim();
+      const alertOnEnter = document.getElementById('aEnter').checked;
+      const alertOnExit  = document.getElementById('aExit').checked;
+      const poly  = collectPolygonJson();
+      if(!name || !poly){ alert('Nombre y polígono son requeridos'); return; }
+
+      const selectedAssets = document.querySelectorAll('#assetsContainer input[type="checkbox"]:checked');
+      const ids = Array.from(selectedAssets).map(o=>o.value);
+
+      const form = new URLSearchParams();
+      form.append('name', name);
+      form.append('polygonJson', poly);
+      form.append('alertOnEnter', alertOnEnter);
+      form.append('alertOnExit',  alertOnExit);
+      ids.forEach(id => form.append('assetIds', id));
+
+      const r = await fetch('/api/geofences', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:form});
+      if(r.ok){ location.reload(); } else { alert('Error guardando geocerca'); }
+    };
+
+    function toggleSubmit(f){
+      fetch(f.action, { method:'POST', body: new FormData(f) })
+        .then(()=>location.reload()).catch(()=>alert('Error'));
+      return false;
+    }
+</script>
+</body>
+</html>

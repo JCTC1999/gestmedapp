@@ -14,7 +14,7 @@ public class Part {
     private Integer minStock; // umbral
     private Integer stock;
 
-    // modelos aplicables (MVP: texto)
+    // modelos aplicables
     @Column(length=1000)
     private String applicableModels;
 }

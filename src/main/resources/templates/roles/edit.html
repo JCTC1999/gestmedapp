@@ -172,7 +172,10 @@
 
         <div class="form-group">
             <label for="roleName">Nombre del Rol (Ej: BODEGA, FINANZAS)</label>
-            <input type="text" id="roleName" th:field="*{roleName}" required placeholder="Escriba un nombre único para el rol"/>
+            <input type="text" id="roleName" th:field="*{roleName}" required
+                   placeholder="Escriba un nombre único para el rol"
+                   style="text-transform: uppercase;"
+                   oninput="this.value = this.value.toUpperCase()"/>
         </div>
 
         <fieldset>

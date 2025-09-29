@@ -11,11 +11,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
+// Este es el controlador web de Spring MVC para gestionar los movimientos de un activo en específico
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/assets/{assetId}/movements")
 public class MovementController {
 
+    // Dependencias del controlador
     private final MovementService movementService;
     private final AssetRepo assetRepo;
 
@@ -26,6 +29,8 @@ public class MovementController {
                        @RequestParam(required = false) String location,
                        Model m) {
         var asset = assetRepo.findById(assetId).orElseThrow();
+
+        // Convierte parámetros de fecha (String) a LocalDate. Si están vacíos o null se asigna null
         LocalDate f = (from==null||from.isBlank())? null : LocalDate.parse(from);
         LocalDate t = (to==null||to.isBlank())? null : LocalDate.parse(to);
 
@@ -37,7 +42,7 @@ public class MovementController {
         return "movements/list";
     }
 
-    /** Form opcional para asentar un movimiento manual (auditor o admin). */
+    // Para crear un movimiento de un activo
     @PostMapping
     public String create(@PathVariable Long assetId,
                          @RequestParam String fromLocation,
@@ -45,9 +50,14 @@ public class MovementController {
                          @RequestParam(required=false) String reason,
                          Authentication auth) {
         var asset = assetRepo.findById(assetId).orElseThrow();
+
+        // si hay usuario autenticado, se usa su nombre; si no, se marca como "system"
         String user = (auth!=null? auth.getName() : "system");
+
+        // Se registra el movimiento usando el servicio (incluye toda la lógica: guardar en BD, asignar fechas, etc.)
         movementService.recordMove(asset, fromLocation, toLocation, reason, user);
-        // también podrías actualizar asset.initialLocation = toLocation si aplica
+
         return "redirect:/assets/"+assetId+"/movements";
     }
 }
+

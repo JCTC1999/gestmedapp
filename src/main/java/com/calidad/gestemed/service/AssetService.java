@@ -10,3 +10,4 @@ public interface AssetService {
     Asset create(Asset a, String createdBy);
     List<Asset> list();
 }
+

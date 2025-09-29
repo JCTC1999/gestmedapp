@@ -16,11 +16,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/reports") // <-- RUTA BASE (evita chocar con "/")
+@RequestMapping("/reports")
 public class ReportController {
 
     private final AssetRepo assetRepo;
@@ -102,6 +104,14 @@ public class ReportController {
         doc.add(new Paragraph("Resumen Operativo", font));
         doc.add(new Paragraph("Fecha: " + LocalDate.now(), font));
         doc.add(new Paragraph("Total activos: " + assetRepo.count(), font));
+
+        // Calcular y añadir el monto total de los activos
+        List<Asset> assets = assetRepo.findAll();
+        BigDecimal totalValue = assets.stream()
+                .map(Asset::getValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        doc.add(new Paragraph("Valor total del inventario: $" + totalValue.toString(), font));
+
         doc.close();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=resumen.pdf")

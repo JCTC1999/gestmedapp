@@ -8,6 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
     <style>
         body {
             background-color: #f8f9fa;
@@ -15,6 +17,20 @@
         .form-card {
             border-radius: 15px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+        #map {
+            height: 300px; /* Tamaño fijo para el mapa */
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+        }
+        .search-group {
+            display: flex;
+            gap: 10px;
+        }
+        .search-group input {
+            flex-grow: 1;
         }
     </style>
 </head>
@@ -68,28 +84,34 @@
                                     <input id="purchaseDate" name="purchaseDate" type="date" class="form-control" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="initialLocation" class="form-label">Ubicación Inicial</label>
-                                    <input id="initialLocation" name="initialLocation" type="text" class="form-control" placeholder="Ej: Hospital General, Piso 3" required>
+                                    <label for="initialLocation" class="form-label">Ubicación Inicial (texto)</label>
+                                    <div class="search-group">
+                                        <input id="initialLocation" name="initialLocation" type="text" class="form-control" placeholder="Ej: Hospital General, Piso 3" required>
+                                        <button type="button" class="btn btn-primary" id="searchBtn">Buscar</button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">O selecciona en el mapa:</label>
+                                    <div id="map"></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="lastLatitude" class="form-label">Latitud (GPS)</label>
-                                    <input id="lastLatitude" name="lastLatitude" type="text" class="form-control" placeholder="Coordenadas de latitud" required>
+                                    <input id="lastLatitude" name="lastLatitude" type="text" class="form-control" placeholder="Coordenadas de latitud" required readonly>
                                 </div>
                                 <div class="mb-3">
                                     <label for="lastLongitude" class="form-label">Longitud (GPS)</label>
-                                    <input id="lastLongitude" name="lastLongitude" type="text" class="form-control" placeholder="Coordenadas de longitud" required>
+                                    <input id="lastLongitude" name="lastLongitude" type="text" class="form-control" placeholder="Coordenadas de longitud" required readonly>
                                 </div>
                                 <div class="mb-3">
                                     <label for="rfidOrQrTag" class="form-label">RFID / QR (Opcional)</label>
                                     <input id="rfidOrQrTag" name="rfidOrQrTag" type="text" class="form-control" placeholder="Código RFID o QR">
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-12 mt-4">
-                                <label for="photos" class="form-label">Foto del Activo</label>
-                                <input id="photos" name="photos" type="file" class="form-control" multiple>
-
-                            </div>
+                        <div class="col-12 mt-4">
+                            <label for="photos" class="form-label">Foto del Activo</label>
+                            <input id="photos" name="photos" type="file" class="form-control" multiple>
                         </div>
 
                         <hr class="my-4">
@@ -106,5 +128,76 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    // Inicializar el mapa
+    const map = L.map('map').setView([9.9394, -84.0445], 9); // Centrado en Costa Rica
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    let marker;
+    const latInput = document.getElementById('lastLatitude');
+    const lonInput = document.getElementById('lastLongitude');
+    const locationInput = document.getElementById('initialLocation');
+    const searchBtn = document.getElementById('searchBtn');
+
+    // Función para actualizar el marcador y los inputs de lat/lon
+    function updateLocation(lat, lon, locationName = '') {
+        latInput.value = lat.toFixed(6);
+        lonInput.value = lon.toFixed(6);
+        if (locationName) {
+            locationInput.value = locationName;
+        }
+        if (marker) {
+            marker.setLatLng([lat, lon]);
+        } else {
+            marker = L.marker([lat, lon]).addTo(map);
+        }
+        map.setView([lat, lon], 15); // Centra el mapa en el nuevo punto
+    }
+
+    // Evento de clic en el mapa
+    map.on('click', function(e) {
+        updateLocation(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Evento para el botón de búsqueda por texto
+    searchBtn.addEventListener('click', async function() {
+        const query = locationInput.value;
+        if (!query.trim()) {
+            alert('Por favor, ingresa una ubicación para buscar.');
+            return;
+        }
+
+        try {
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                const result = data[0];
+                const lat = parseFloat(result.lat);
+                const lon = parseFloat(result.lon);
+                updateLocation(lat, lon, result.display_name);
+            } else {
+                alert('No se encontraron resultados para esa ubicación.');
+            }
+        } catch (error) {
+            console.error('Geocoding error:', error);
+            alert('Error al buscar la ubicación. Inténtalo de nuevo.');
+        }
+    });
+
+    // Validar el formulario antes de enviar
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!latInput.value || !lonInput.value) {
+            e.preventDefault();
+            alert('Por favor, selecciona o busca una ubicación para el activo.');
+        }
+    });
+</script>
+
 </body>
 </html>

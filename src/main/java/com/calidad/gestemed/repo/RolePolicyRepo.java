@@ -8,3 +8,4 @@ import java.util.Optional;
 public interface RolePolicyRepo extends JpaRepository<RolePolicy, Long> {
     Optional<RolePolicy> findByRoleName(String roleName);
 }
+

@@ -9,6 +9,7 @@ import com.calidad.gestemed.repo.ContractRepo;
 import com.calidad.gestemed.repo.NotificationRepo;
 import com.calidad.gestemed.service.ContractService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,7 +22,10 @@ import java.util.List;
 public class ContractServiceImpl implements ContractService {
     private final ContractRepo repo;
     private final NotificationRepo notificationRepo;
-    private final MailSender mailSender; // si no hay SMTP real, no enviará
+    private final MailSender mailSender;
+
+    @Value("${app.mail.from:${spring.mail.username}}")
+    private String from;
 
     @Override public Contract save(Contract c) {
         c.setStatus(ContractStatus.VIGENTE);
@@ -30,7 +34,7 @@ public class ContractServiceImpl implements ContractService {
 
     @Override public List<Contract> list() { return repo.findAll(); }
 
-    // Corre cada mañana (08:00) — ajusta a tu TZ si lo deseas
+    // Corre cada mañana (08:00)
     @Scheduled(cron = "0 0 8 * * *")
     @Override public void checkAndNotifyExpiring() {
         LocalDate today = LocalDate.now();
@@ -55,7 +59,8 @@ public class ContractServiceImpl implements ContractService {
         notificationRepo.save(Notification.builder().message(msg).createdAt(java.time.LocalDateTime.now()).build());
         try {
             SimpleMailMessage m = new SimpleMailMessage();
-            m.setTo("demo@localhost"); m.setSubject("Alerta de contrato"); m.setText(msg);
+            m.setFrom(from);
+            m.setTo("jctorrescalderon@gmail.com"); m.setSubject("Alerta de contrato"); m.setText(msg);
             mailSender.send(m);
         } catch (Exception ignored) {}
     }

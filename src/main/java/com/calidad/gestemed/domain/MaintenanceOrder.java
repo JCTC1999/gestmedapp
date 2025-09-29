@@ -25,7 +25,7 @@ public class MaintenanceOrder {
     @Enumerated(EnumType.STRING) private MaintStatus status; // PENDIENTE, EN_CURSO, FINALIZADO
 
     // Cierre del mantenimiento
-    @Column(length=4000) private String photoPaths; // varias fotos (MVP)
+    @Column(length=4000) private String photoPaths; // varias fotos
     private String signaturePath; // firma PNG
     private LocalDateTime closedAt;
 }

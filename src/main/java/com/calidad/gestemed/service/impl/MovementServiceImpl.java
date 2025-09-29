@@ -20,7 +20,9 @@ public class MovementServiceImpl implements MovementService {
 
     private final AssetMovementRepo repo;
 
-    @Value("${movements.retentionDays:365}") // configurable, pero mínimo 90
+    // los movimientos que ya han pasado más de 90 días registrados son eliminados
+
+    @Value("${movements.retentionDays:90}") // configurable, pero mínimo 90
     private int retentionDays;
 
     @Override
@@ -40,13 +42,14 @@ public class MovementServiceImpl implements MovementService {
     @Override
     public List<AssetMovement> history(Long assetId, LocalDate from, LocalDate to, String locationLike) {
         var fromDt = (from == null) ? null : from.atStartOfDay();
-        // to exclusivo -> sumamos 1 día para incluir el final
+        // se suma 1 día para incluir el día final
+
         var toDt   = (to   == null) ? null : to.plusDays(1).atStartOfDay();
         var loc = (locationLike == null || locationLike.isBlank()) ? null : locationLike.trim();
         return repo.searchNative(assetId, fromDt, toDt, loc);
     }
 
-    /** Purga automática diaria: NUNCA borra nada con menos de 90 días. */
+    //borrado automático de movimiento con más de 90 días de antiguiedad
     @Scheduled(cron = "0 0 3 * * *")
     public void enforceRetention() {
         int days = Math.max(retentionDays, 90);

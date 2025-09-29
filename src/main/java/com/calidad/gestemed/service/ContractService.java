@@ -9,3 +9,4 @@ public interface ContractService {
     List<Contract> list();
     void checkAndNotifyExpiring(); // alerta por vencer/vencidos
 }
+
