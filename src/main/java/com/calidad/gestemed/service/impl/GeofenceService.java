@@ -34,26 +34,34 @@ public class GeofenceService {
 
 
     //Este es el método principal que se activa con cada nueva posición de GPS
+//Este es el método principal que se activa con cada nueva posición de GPS
     @Transactional
     public void processPosition(Asset asset, double lat, double lng) {
         List<Geofence> fences = geofenceRepo.findApplicable(asset);
         for (Geofence g : fences) {
             boolean insideNow = pointInPolygon(lat, lng, parsePolygon(g.getPolygonJson()));
+
+            // Busca el estado existente o crea uno nuevo en memoria si no lo encuentra.
             GeofenceState st = stateRepo.findByAssetAndGeofence(asset, g)
                     .orElse(GeofenceState.builder()
                             .asset(asset).geofence(g).inside(insideNow)
                             .updatedAt(LocalDateTime.now())
                             .build());
 
+            // --- LÓGICA CORREGIDA ---
+            // 'firstTime' es verdadero si el estado no tiene ID (nunca se ha guardado en la BD).
             boolean firstTime = (st.getId() == null);
+            // 'changed' es verdadero si NO es la primera vez Y el estado ha cambiado.
             boolean changed = !firstTime && (st.isInside() != insideNow);
 
-            if (changed) {
+            // Se debe generar un evento si es la primera vez o si el estado ha cambiado.
+            if (firstTime || changed) {
                 GeofenceEvent.Type type = insideNow ? GeofenceEvent.Type.ENTER : GeofenceEvent.Type.EXIT;
 
                 // ¿Debemos alertar?
                 boolean shouldAlert = (insideNow && g.isAlertOnEnter()) || (!insideNow && g.isAlertOnExit());
-                // Guarda evento
+
+                // Guarda el evento en la base de datos.
                 eventRepo.save(GeofenceEvent.builder()
                         .asset(asset).geofence(g).type(type)
                         .lat(lat).lng(lng)
@@ -87,9 +95,10 @@ public class GeofenceService {
                 }
             }
 
-            // Actualiza estado
+            // Actualiza el estado actual del activo dentro de la geocerca.
             st.setInside(insideNow);
             st.setUpdatedAt(LocalDateTime.now());
+            // Guarda el estado en la BD (sea nuevo o una actualización).
             stateRepo.save(st);
         }
     }
