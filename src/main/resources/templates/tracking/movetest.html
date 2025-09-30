@@ -74,6 +74,14 @@
         button[type="submit"] {
             background-color: #007bff;
             color: white;
+            /* Añadimos estilos para el estado de carga */
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        button[type="submit"]:disabled {
+            background-color: #0056b3;
+            cursor: not-allowed;
         }
         a {
             background-color: #6c757d;
@@ -105,6 +113,18 @@
         }
         .search-group input {
             flex-grow: 1;
+        }
+        /* Estilo para el spinner */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -143,7 +163,9 @@
         </div>
 
         <div class="buttons">
-            <button type="submit">Registrar Movimiento</button>
+            <button type="submit" id="submitBtn">
+                <span id="buttonText">Registrar Movimiento</span>
+            </button>
             <a th:href="@{'/assets/' + ${asset.id} + '/history'}">Ver Historial</a>
             <a href="/assets" class="back">Regresar</a>
         </div>
@@ -153,8 +175,8 @@
 </div>
 
 <script th:inline="javascript">
+    // --- Lógica del mapa y búsqueda (sin cambios) ---
     const assetBizId = [[${asset.assetId}]];
-
     const map = L.map('map').setView([9.9394, -84.0445], 9);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -181,7 +203,7 @@
 
     map.on('click', function(e) {
         updateLocation(e.latlng.lat, e.latlng.lng);
-        locationInput.value = ''; // Limpia el campo de texto si se selecciona en el mapa
+        locationInput.value = '';
     });
 
     searchBtn.addEventListener('click', async function() {
@@ -190,12 +212,10 @@
             showMessage('error', 'Por favor, ingresa una ubicación para buscar.');
             return;
         }
-
         try {
             const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
             const response = await fetch(url);
             const data = await response.json();
-
             if (data && data.length > 0) {
                 const result = data[0];
                 const lat = parseFloat(result.lat);
@@ -211,21 +231,34 @@
         }
     });
 
+    // --- LÓGICA DEL FORMULARIO MODIFICADA ---
     document.getElementById('moveAssetForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+
+        // Referencias al botón y al texto
+        const submitBtn = document.getElementById('submitBtn');
+        const buttonText = document.getElementById('buttonText');
+
+        // Crear el spinner
+        const spinner = document.createElement('div');
+        spinner.className = 'spinner';
 
         const lat = latInput.value;
         const lng = lonInput.value;
         const note = noteInput.value;
-        const locationText = locationInput.value; // Obtener el valor del campo de texto de la ubicación
+        const locationText = locationInput.value;
 
         if (!lat || !lng) {
             showMessage('error', 'Por favor, selecciona o busca una ubicación para continuar.');
             return;
         }
 
+        // Iniciar estado de carga
+        submitBtn.disabled = true;
+        buttonText.textContent = 'Registrando...';
+        submitBtn.prepend(spinner); // Añade el spinner al principio del botón
+
         try {
-            // Construir la URL con el nuevo parámetro de texto de ubicación
             const url = `/api/gps/biz/${assetBizId}?lat=${lat}&lng=${lng}&note=${note}&location=${encodeURIComponent(locationText)}`;
             const response = await fetch(url, { method: 'POST' });
 
@@ -240,6 +273,11 @@
         } catch (error) {
             console.error('Fetch error:', error);
             showMessage('error', 'Ocurrió un error al conectar con el servidor. Revisa la consola para más detalles.');
+        } finally {
+            // Finalizar estado de carga (se ejecuta siempre, con éxito o con error)
+            submitBtn.disabled = false;
+            buttonText.textContent = 'Registrar Movimiento';
+            spinner.remove(); // Elimina el spinner del botón
         }
     });
 
