@@ -25,6 +25,7 @@ public class Asset {
     @NotNull private LocalDate purchaseDate;
     @NotBlank private String initialLocation;
 
+
     @Column(name = "asset_value", nullable = false)
     @NotNull private BigDecimal value;
 
@@ -45,6 +46,7 @@ public class Asset {
 
     @Column(name = "last_gps_at")
     private LocalDateTime lastGpsAt;
+
 }
 
 

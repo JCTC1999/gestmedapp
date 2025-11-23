@@ -1,9 +1,7 @@
 package com.calidad.gestemed.controller;
 
-// ... (existing imports)
 import com.calidad.gestemed.domain.Asset;
 import com.calidad.gestemed.repo.AssetRepo;
-import com.opencsv.CSVReader;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.security.core.Authentication;
@@ -11,29 +9,25 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.InputStreamReader;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-// Este controlador maneja la carga de archivos CSV y XLSX para la importación de datos.
-// Incluye lógica estándar para detectar formatos, leer el contenido,
-// y mapear las filas a objetos de la base de datos, evitando duplicados.
-// Es una plantilla común para procesos de importación.
-
-@Controller @RequiredArgsConstructor
+@Controller
+@RequiredArgsConstructor
 @RequestMapping("/import")
 public class ImportController {
     private final AssetRepo assetRepo;
 
-    @GetMapping public String form() { return "import/form"; }
+    @GetMapping
+    public String form() {
+        return "import/form";
+    }
 
     @PostMapping
     public String upload(@RequestParam("file") MultipartFile file, Model model) {
@@ -44,11 +38,16 @@ public class ImportController {
             }
 
             String name = (file.getOriginalFilename() == null ? "" : file.getOriginalFilename()).toLowerCase();
-
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String currentUser = (authentication != null) ? authentication.getName() : "system";
             LocalDateTime now = LocalDateTime.now();
 
+            int duplicates = 0; // <--- NUEVO CONTADOR DE DUPLICADOS
+            List<Asset> imported = new ArrayList<>();
+
+            // ==========================================
+            // LÓGICA PARA CSV
+            // ==========================================
             if (name.endsWith(".csv")) {
                 String content = new String(file.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
                 content = content.replace("\uFEFF", "");
@@ -56,7 +55,7 @@ public class ImportController {
 
                 com.opencsv.CSVParser parser = new com.opencsv.CSVParserBuilder().withSeparator(sep).build();
                 try (com.opencsv.CSVReader r = new com.opencsv.CSVReaderBuilder(new java.io.StringReader(content)).withCSVParser(parser).build()) {
-                    java.util.List<com.calidad.gestemed.domain.Asset> imported = new java.util.ArrayList<>();
+
                     String[] row;
                     boolean header = true;
                     int line = 0;
@@ -64,87 +63,115 @@ public class ImportController {
                     while ((row = r.readNext()) != null) {
                         line++;
                         if (header) { header = false; continue; }
-                        if (row.length == 0) continue;
-                        if (row.length == 1 && (row[0] == null || row[0].isBlank())) continue;
+                        if (row.length == 0 || (row.length == 1 && (row[0] == null || row[0].isBlank()))) continue;
 
                         if (row.length < 8) {
-                            model.addAttribute("error", "Formato CSV inválido en línea " + line + ": se esperaban 8 columnas y llegaron " + row.length);
-                            return "import/form";
-                        }
-                        for (int i = 0; i < row.length; i++) {
-                            row[i] = (row[i] == null ? "" : row[i].trim());
+                            throw new IllegalArgumentException("Error en fila CSV " + line + ": Se esperaban 8 columnas, llegaron " + row.length + ".");
                         }
 
-                        com.calidad.gestemed.domain.Asset a = mapRow(
-                                row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]
-                        );
+                        for (int i = 0; i < row.length; i++) row[i] = (row[i] == null ? "" : row[i].trim());
 
-                        // Establecer valores por defecto para GPS
-                        a.setLastLatitude(9.853517);
-                        a.setLastLongitude(-83.908713);
-                        a.setLastGpsAt(now);
+                        try {
+                            if (row[0].isEmpty()) throw new IllegalArgumentException("El ID del Activo es obligatorio.");
 
-                        a.setCreatedBy(currentUser);
-                        a.setCreatedAt(now);
+                            // Validar duplicados ANTES de crear el objeto para ahorrar memoria
+                            if (assetRepo.existsByAssetId(row[0])) {
+                                duplicates++; // <--- CONTAMOS DUPLICADO
+                                continue;     // <--- SALTAMOS A LA SIGUIENTE FILA
+                            }
 
-                        if (!assetRepo.existsByAssetId(a.getAssetId())) {
+                            Asset a = mapRow(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]);
+
+                            // Defaults
+                            a.setLastLatitude(9.853517);
+                            a.setLastLongitude(-83.908713);
+                            a.setLastGpsAt(now);
+                            a.setCreatedBy(currentUser);
+                            a.setCreatedAt(now);
+
                             imported.add(assetRepo.save(a));
+
+                        } catch (DateTimeParseException e) {
+                            throw new IllegalArgumentException("Error en fila CSV " + line + ": Fecha inválida ('" + row[4] + "').");
+                        } catch (NumberFormatException e) {
+                            throw new IllegalArgumentException("Error en fila CSV " + line + ": Valor numérico inválido ('" + row[6] + "').");
+                        } catch (Exception e) {
+                            throw new IllegalArgumentException("Error en fila CSV " + line + ": " + e.getMessage());
                         }
                     }
-
-                    model.addAttribute("count", imported.size());
-                    return "import/success";
                 }
 
+                // ==========================================
+                // LÓGICA PARA EXCEL (XLSX)
+                // ==========================================
             } else if (name.endsWith(".xlsx")) {
-                java.util.List<com.calidad.gestemed.domain.Asset> imported = new java.util.ArrayList<>();
-                try (org.apache.poi.ss.usermodel.Workbook wb = org.apache.poi.ss.usermodel.WorkbookFactory.create(file.getInputStream())) {
-                    org.apache.poi.ss.usermodel.Sheet s = wb.getSheetAt(0);
+                try (Workbook wb = WorkbookFactory.create(file.getInputStream())) {
+                    Sheet s = wb.getSheetAt(0);
                     boolean header = true;
-                    for (org.apache.poi.ss.usermodel.Row row : s) {
+
+                    for (Row row : s) {
+                        int rowNum = row.getRowNum() + 1;
                         if (header) { header = false; continue; }
                         if (row == null) continue;
+
                         String assetId = getCellString(row.getCell(0));
                         if (assetId.isBlank()) continue;
 
-                        com.calidad.gestemed.domain.Asset a = mapRow(
-                                assetId,
-                                getCellString(row.getCell(1)),
-                                getCellString(row.getCell(2)),
-                                getCellString(row.getCell(3)),
-                                getCellDate(row.getCell(4)),
-                                getCellString(row.getCell(5)),
-                                getCellString(row.getCell(6)),
-                                getCellString(row.getCell(7))
-                        );
+                        // Validación básica de estructura Excel
+                        if (row.getLastCellNum() < 8) {
+                            // Opcional: lanzar error o advertir. Aquí lanzamos error para ser consistentes con CSV.
+                            // throw new IllegalArgumentException("Error en Excel fila " + rowNum + ": Faltan columnas.");
+                        }
 
-                        // Establecer valores por defecto para GPS
-                        a.setLastLatitude(9.853517);
-                        a.setLastLongitude(-83.908713);
-                        a.setLastGpsAt(now);
+                        try {
+                            // Validar duplicados
+                            if (assetRepo.existsByAssetId(assetId)) {
+                                duplicates++; // <--- CONTAMOS DUPLICADO
+                                continue;
+                            }
 
-                        a.setCreatedBy(currentUser);
-                        a.setCreatedAt(now);
+                            Asset a = mapRow(
+                                    assetId,
+                                    getCellString(row.getCell(1)),
+                                    getCellString(row.getCell(2)),
+                                    getCellString(row.getCell(3)),
+                                    getCellDate(row.getCell(4)),
+                                    getCellString(row.getCell(5)),
+                                    getCellString(row.getCell(6)),
+                                    getCellString(row.getCell(7))
+                            );
 
-                        if (!assetRepo.existsByAssetId(a.getAssetId())) {
+                            a.setLastLatitude(9.853517);
+                            a.setLastLongitude(-83.908713);
+                            a.setLastGpsAt(now);
+                            a.setCreatedBy(currentUser);
+                            a.setCreatedAt(now);
+
                             imported.add(assetRepo.save(a));
+
+                        } catch (Exception e) {
+                            throw new IllegalArgumentException("Error en Excel fila " + rowNum + ": " + e.getMessage());
                         }
                     }
                 }
-                model.addAttribute("count", imported.size());
-                return "import/success";
             } else {
-                model.addAttribute("error", "Formato no soportado. Sube un .csv o .xlsx");
+                model.addAttribute("error", "Formato no soportado.");
                 return "import/form";
             }
 
+            // --- ÉXITO: ENVIAMOS LOS CONTADORES A LA VISTA ---
+            model.addAttribute("count", imported.size());
+            model.addAttribute("duplicates", duplicates); // <--- ENVIAMOS DUPLICADOS
+
+            return "import/success";
+
         } catch (Exception e) {
-            model.addAttribute("error", "No se pudo importar: " + e.getMessage());
+            model.addAttribute("error", "Falló la importación: " + e.getMessage());
             return "import/form";
         }
     }
 
-
+    // ... (Mantén los métodos mapRow, detectSeparator, getCellString, getCellDate igual que antes)
     private Asset mapRow(String assetId, String model, String serial, String maker,
                          String purchase, String location, String value, String photoPaths) {
         return Asset.builder()
@@ -171,9 +198,7 @@ public class ImportController {
         String s;
         CellType type = cell.getCellType();
         switch (type) {
-            case STRING:
-                s = cell.getStringCellValue();
-                break;
+            case STRING: s = cell.getStringCellValue(); break;
             case NUMERIC:
                 if (DateUtil.isCellDateFormatted(cell)) {
                     s = cell.getLocalDateTimeCellValue().toLocalDate().toString();
@@ -183,14 +208,9 @@ public class ImportController {
                     s = (v == lv) ? Long.toString(lv) : Double.toString(v);
                 }
                 break;
-            case BOOLEAN:
-                s = Boolean.toString(cell.getBooleanCellValue());
-                break;
-            case FORMULA:
-                s = cell.getCellFormula();
-                break;
-            default:
-                s = "";
+            case BOOLEAN: s = Boolean.toString(cell.getBooleanCellValue()); break;
+            case FORMULA: s = cell.getCellFormula(); break;
+            default: s = "";
         }
         return (s == null) ? "" : s.trim();
     }

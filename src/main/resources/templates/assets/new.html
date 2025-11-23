@@ -49,7 +49,10 @@
                         </div>
                         <a href="/assets" class="btn btn-secondary btn-lg"><i class="bi bi-x-circle-fill me-2"></i>Cancelar</a>
                     </div>
-
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong th:text="${error}">Error message</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                     <form th:action="@{/assets}" method="post" enctype="multipart/form-data">
                         <div class="row g-3">
                             <div class="col-md-6">

@@ -9,9 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
+        body { background-color: #f8f9fa; }
         .success-card {
             border-radius: 15px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
@@ -31,9 +29,20 @@
                 </div>
                 <div class="card-body p-5">
                     <h4 class="card-title fw-bold mb-3">¡Éxito!</h4>
-                    <p class="card-text fs-5">
-                        Se han importado exitosamente <b th:text="${count}" class="text-success">0</b> registros a la base de datos.
-                    </p>
+
+                    <div class="alert alert-success">
+                        Se han importado exitosamente <b th:text="${count}" class="text-success">0</b> registros.
+                    </div>
+
+                    <div th:if="${duplicates > 0}" class="alert alert-warning text-start">
+                        <div class="d-flex">
+                            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                            <div>
+                                <strong>Atención:</strong> Se omitieron <span th:text="${duplicates}" class="fw-bold">0</span> registros porque el ID ya existía en el sistema.
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="card-footer bg-light py-3 d-flex justify-content-center gap-2">
                     <a href="/assets" class="btn btn-primary"><i class="bi bi-box-seam me-2"></i>Ver activos</a>

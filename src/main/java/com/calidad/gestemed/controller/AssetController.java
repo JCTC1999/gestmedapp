@@ -53,7 +53,16 @@ public class AssetController {
     }
 
     @PostMapping
-    public String create(Asset asset, @RequestParam("photos") List<MultipartFile> photos, Authentication auth){
+    public String create(Asset asset, @RequestParam("photos") List<MultipartFile> photos, Authentication auth, Model model){
+
+        //  VALIDACIÓN DE ASSET ID ÚNICO
+        if (assetRepo.existsByAssetId(asset.getAssetId())) {
+            model.addAttribute("error", "Error: El Asset ID '" + asset.getAssetId() + "' ya existe en el sistema. Por favor verifique.");
+            model.addAttribute("asset", asset);
+            return "assets/new";
+        }
+
+
         // En lugar de pasar las fotos directamente al servicio, las subimos a Azure aquí
         // En el parametro List<MultipartFile> photos vienen las fotos que el usuario agrego para el activo. Pero estas fotos estan en un formato extraño y se necesita tranformarlas con el metodo map
         //photos.stream() se utiliza para iterar las photos. En este momento las photos no estan transformadas
